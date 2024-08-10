@@ -48,3 +48,38 @@ cargo new loansasa
     * Add `actix-files`(**AF**) dependency to render static files
     * Import the `Files` module from `AF`
     * Register a HTTP service to render the static files in `assets`
+## 3. Nginx configuration
+- Install nginx as the web server:
+```bash
+$ sudo apt-get install nginx
+```
+- Add a domain name mapper to localhost IP address in `/etc/hosts`:
+```bash
+127.0.0.1   loansasa.com
+```
+- Add the nginx server block and configure it as a reverse proxy as follows:
+```bash
+$ sudo cat /etc/nginx/sites-available/loansasa
+server {
+	listen 80;
+
+	server_name loansasa.com;
+
+	location / {
+		proxy_pass http://127.0.0.1:8080;  # The address of your backend server
+	        proxy_set_header Host $host;
+	        proxy_set_header X-Real-IP $remote_addr;
+	        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+	        proxy_set_header X-Forwarded-Proto $scheme;		
+	}
+}
+$ sudo ln -s /etc/nginx/sites-available/loansasa /etc/nginx/sites-enabled/
+$ sudo nginx -t
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+$ sudo systemctl reload nginx
+```
+- Now to be able to access the website locally, in the web browser type:
+`http://loansasa.com/register`
+
+
