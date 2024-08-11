@@ -1,16 +1,18 @@
 ## Tasks
-### 0. Create project
+### 0. Create rust project
+- Install rust language and create the `loansasa` project as follows:
 ```bash
-cargo new loansasa
+$ curl --proto '=https' --tlsv1.2 https://sh.rustup.rs -sSf | sh
+$ cargo new loansasa
+$ cd loansasa
 ```
 ### 1. Add actix server
-- Add `actix-web`(**AW**) dependency in `.toml` to handle web server
+- Add `actix-web`(**AW**) dependency in `.toml` to act as web application server
 - In the main async fn in main.rs:
-    * Import the `HTTPServer` from `AW` dependency
-    * Import `Http server` from `AW` and start a new instance
-    * Bind to local host port 8080, run it and await
+    * Import `HttpServer` from `AW` and start a new instance
+    * Bind to loopback address (**127.0.0.1**) port `8080`, run it and await
 
-## 2. Add register GET route
+### 2. Add register GET route and register page
 - In the `main.rs`:
     * Import the `web` & `App` mod from `AW`
     * Create a new `App` instance in the `HTTPServer`
@@ -48,7 +50,7 @@ cargo new loansasa
     * Add `actix-files`(**AF**) dependency to render static files
     * Import the `Files` module from `AF`
     * Register a HTTP service to render the static files in `assets`
-## 3. Nginx configuration
+### 3. Nginx configuration
 - Install nginx as the web server:
 ```bash
 $ sudo apt-get install nginx
@@ -82,4 +84,51 @@ $ sudo systemctl reload nginx
 - Now to be able to access the website locally, in the web browser type:
 `http://loansasa.com/register`
 
+### 4. Set up loansasa Postgress Database
+- Install the database:
+```bash
+$ sudo apt install postgresql postgresql-contrib
+```
+- Log in as root user:
+```bash
+$ sudo -u postgres psql
+psql (14.12 (Ubuntu 14.12-0ubuntu0.22.04.1))
+Type "help" for help.
 
+postgres=# 
+```
+- Create a postgress user's account as well as loansasa database:
+```bash
+postgres=# create database loansasa;
+CREATE DATABASE
+postgres=# create user <USERNAME> with encrypted password '<PASSWORD>';
+ERROR:  role "razaoul" already exists
+postgres=# GRANT ALL PRIVILEGES ON DATABASE loansasa TO razaoul;
+GRANT
+postgres-# 
+```
+- Install diesel cli:
+```bash
+$ curl --proto '=https' --tlsv1.2 -LsSf https://github.com/diesel-rs/diesel/releases/download/v2.2.1/diesel_cli-installer.sh | sh
+```
+- Setup the database url to the database as follows:
+```bash
+$ echo DATABASE_URL=postgres://username:password@localhost/diesel_demo > .env
+$ diesel setup
+```
+- The above sets up the diesel database and creates the migrations folder to handle tables
+- Next create the users table to contain the following attributes:
+    * `id` : is the serial primary key
+    * `name`: The username of the user
+    * `email`: The email of the user
+    * `password`: The password the user
+    * `created_at`: The time the user created their account
+```bash
+$ diesel migration generate create_users
+$ diesel migration run
+```
+## Resources
+- [Postgress](https://www.cherryservers.com/blog/how-to-install-and-setup-postgresql-server-on-ubuntu-20-04)
+- [Actix](https://actix.rs/docs/getting-started/)
+- [Register template](https://codepen.io/CrisD3v/pen/abPjQQv)
+- [diesel](https://diesel.rs/guides/getting-started)
