@@ -4,6 +4,9 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-actix-web = "4.0" 
-askama = "0.11"
-actix-files = "0.6.6"  
+actix-web = "4.0" # Web server
+askama = "0.11"   # Dynamic rendering
+actix-files = "0.6.6" # Static rendering
+diesel = { version = "2.0.0", features = ["postgres", "r2d2"] } # Postgres ORM
+r2d2 = "0.8"  # Connection pooling
+dotenv = "0.15"  # For reading environment variables

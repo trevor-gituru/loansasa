@@ -127,6 +127,27 @@ $ diesel setup
 $ diesel migration generate create_users
 $ diesel migration run
 ```
+### 5. Set up the database connection
+- Instead of establishing new connections database connections each time, a `connection pool` is used
+where:
+    * Each time the application starts, the pool is initialized with a predetermined number of db connections
+    * When application needs to interact with the database it borrows a connection from the pool
+    * Uses this connection to perform db operations and returns it upon completion
+- Add the `diesel` dependecy which will have the `postgres` and `r2s2` features to handle connection pool and db operations
+- Create the `db_operations` package to handle all db operations:
+    * Add this package to main module.
+    * Create the `establish_connection` fn in `db` module to create the connection pool:
+        + It fetches the database url
+        + Creates a connection manager
+        + Creates a connection pool having max number of connections of 15
+- Create the `AppState` model in `app_state` to set up a shared piece of data:
+    * Currently it will only have the DbPool from `db`
+    * Add it to `models` list
+- Next in `main` module:
+    * Initialize the connection pool
+    * Create `AppState` with the connection pool
+    * Share the `AppState` with all routes
+
 ## Resources
 - [Postgress](https://www.cherryservers.com/blog/how-to-install-and-setup-postgresql-server-on-ubuntu-20-04)
 - [Actix](https://actix.rs/docs/getting-started/)
