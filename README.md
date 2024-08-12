@@ -165,7 +165,8 @@ where:
     + Add `serde` dependency to deserialize form data
     + Same fields as `NewUser`but actual data type
 ### 7. Add db operations for Users
-
+- Create a `users` module responsible for having all methods of users:
+    *
 ## Resources
 - [Postgress](https://www.cherryservers.com/blog/how-to-install-and-setup-postgresql-server-on-ubuntu-20-04)
 - [Actix](https://actix.rs/docs/getting-started/)
