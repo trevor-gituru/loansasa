@@ -127,7 +127,7 @@ $ diesel setup
 $ diesel migration generate create_users
 $ diesel migration run
 ```
-### 5. Set up the database connection
+### 5. Set up the database connection pool
 - Instead of establishing new connections database connections each time, a `connection pool` is used
 where:
     * Each time the application starts, the pool is initialized with a predetermined number of db connections
@@ -147,6 +147,24 @@ where:
     * Initialize the connection pool
     * Create `AppState` with the connection pool
     * Share the `AppState` with all routes
+### 6. Create users model to represent user table
+- Create the users model to represent users table:
+    * `id`: positive 32 bit integer
+    * `name`: String
+    * `email`: String
+    * `password`: String which is hashed
+    * `created_at`: Should be a date time:
+        + Add `chrono` dependency to use DateTime, as part of `diesel` features
+        + Use NaiveDateTime since the timezone will be local hence wont matter
+- Create a `NewUser` model in `users` for creating users with default values:
+    + `name`: String
+    + `email`: String
+    + `password`: String which is hashed
+    + All field are references since diesel requires insertables to be so
+- Create a `RegisterForm` model in `users` to represent client register details:
+    + Add `serde` dependency to deserialize form data
+    + Same fields as `NewUser`but actual data type
+### 7. Add db operations for Users
 
 ## Resources
 - [Postgress](https://www.cherryservers.com/blog/how-to-install-and-setup-postgresql-server-on-ubuntu-20-04)

@@ -1,11 +1,12 @@
 mod controllers;
 mod db_operations;
 mod models;
+mod schema;
 
 use actix_web::{web, App, HttpServer};
 use actix_files::Files;
 use crate::controllers::auth::{register_get, register_post};
-use  crate::db_operations::db::establish_connection;
+use crate::db_operations::db::establish_connection;
 use crate::models::app_state::AppState;
 
 
