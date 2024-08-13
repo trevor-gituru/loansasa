@@ -164,9 +164,12 @@ where:
 - Create a `RegisterForm` model in `users` to represent client register details:
     + Add `serde` dependency to deserialize form data
     + Same fields as `NewUser`but actual data type
-### 7. Add db operations for Users
+### 7. Add db operations for Users to register
 - Create a `users` module responsible for having all methods of users:
-    *
+    * Add a `create_user` fn which:
+        + Takes 2 parameters, the `NewUser` reference & Pgconnection
+        + Inserts user into dB
+        + Returns the QueryResult
 ## Resources
 - [Postgress](https://www.cherryservers.com/blog/how-to-install-and-setup-postgresql-server-on-ubuntu-20-04)
 - [Actix](https://actix.rs/docs/getting-started/)
