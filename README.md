@@ -234,6 +234,15 @@ Add `LoginForm` struct in `users` model to represent Login Form data:
 - It has 2 fields:
     * `identifier`: Username/Email, is a string
     * `Password`: Is a string
+#### Part 3 - Add post controller
+Add `login_post` fn in `auth` controller:
+- It extracts the login form data & App State
+- All errors are handled by `login_error`
+- It first attempts to get DB connection
+- It then attempts to find the user based on the `identifier` field given
+- Afterwards it verifies if the identified user has same password as one provided
+- Once all above returns true it then calls the `handle_login` function
+
 
 ## Resources
 - [Postgress](https://www.cherryservers.com/blog/how-to-install-and-setup-postgresql-server-on-ubuntu-20-04)

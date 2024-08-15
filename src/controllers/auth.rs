@@ -1,9 +1,9 @@
 use actix_web::{HttpResponse, Responder, web};
 use askama::Template;
-use crate::db_operations::users::create_user;
+use crate::db_operations::users::{create_user, verify_password, find_user};
 use crate::models::app_state::AppState;
 use crate::models::ui::{RegisterTemplate, LoginTemplate};
-use crate::models::users::{NewUser, RegisterForm, User};
+use crate::models::users::{User, NewUser, RegisterForm, LoginForm};
 // Get Controllers
 pub async fn register_get() -> impl Responder {
     let template = RegisterTemplate{
@@ -58,6 +58,46 @@ pub async fn register_post(
     }
 
 }
+
+pub async fn login_post(
+    login_form: web::Form<LoginForm>, 
+    app_state: web::Data<AppState>
+) -> impl Responder {
+    println!("\n\nLog In Data is:\n{:#?}", login_form);
+    match app_state.pool.get() {
+        Ok(mut conn) => {
+            match find_user(&login_form.identifier, &mut conn) {
+                Ok(user) => {
+                    match verify_password(&user, &login_form.password){
+                        true => {
+                            println!("{} successfully logged in\n", user.name);
+                            handle_login(user)
+                        }
+                        false => {
+                            let msg = "Username/Email and password do not match :\n";
+
+                            login_error(&login_form.identifier, &msg,4 )
+                        }
+                    }
+                }
+                Err(e) => {
+                    let msg = "Username/Email does not exist :\n";
+                    println!("{msg}{e:#?}");
+                    login_error(&login_form.identifier, &msg,4 )
+                    
+                }
+            }
+        }
+        Err(e) => {
+            // Failed to get a connection
+            // Handle the error here, e.g., log it, return an error response, etc.
+            let msg = "Unable connect to database";
+            println!("{msg}:\n{e:#?}");
+            login_error(&login_form.identifier, &msg, 5)
+
+        }
+    }
+}
 // Error Handlers
 fn register_error(fail_user: &NewUser<'_>, err: &str, stats: u8) -> HttpResponse {
     let template = RegisterTemplate{
@@ -78,9 +118,26 @@ fn register_error(fail_user: &NewUser<'_>, err: &str, stats: u8) -> HttpResponse
         }
     }
 }
-
+fn login_error(fail_identifier: &str, err: &str, stats: u8) -> HttpResponse {
+    let template = LoginTemplate{
+        identifier: &fail_identifier,
+        error: Some(err),
+    };
+    match stats {
+        5 => {
+            HttpResponse::InternalServerError().content_type("text/html").body(template.render().unwrap())
+        }
+        4 => {
+            HttpResponse::BadRequest().content_type("text/html").body(template.render().unwrap())
+            
+        }
+        _ => {
+            HttpResponse::InternalServerError().content_type("text/html").body(template.render().unwrap())
+        }
+    }
+}
 fn handle_login(user: User) -> HttpResponse {
-    HttpResponse::Ok().body(format!("Successfully created\nid: {}\nname:\
+    HttpResponse::Ok().body(format!("Welcome\nid: {}\nname:\
     {}\nemail: {}\npassword: {}\ncreated_at: {}\n", user.id, user.name, user.email, 
     user.password, user.created_at))
 }
