@@ -15,7 +15,7 @@ pub async fn register_get() -> impl Responder {
 }
 pub async fn login_get() -> impl Responder {
     let template = LoginTemplate{
-        email: "",
+        identifier: "",
         error : None,
     };
     HttpResponse::Ok().content_type("text/html").body(template.render().unwrap())

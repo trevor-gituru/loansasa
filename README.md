@@ -196,12 +196,12 @@ In `auth` controller module add the `register_error` fn to handle errors during 
 ### 8. Add Get controller for Login
 #### Part 1 - Template
 In `templates`, create the login html template based on register html template:
-- email field
+- identifier field
 - password field
 - error field
 #### Part 2 - UI
 In `ui` models add `LogInTemplate`:
-- email field
+- identifier field
 - error field
 #### Part 3 - get controller
 Add 'login_get` in controllers module:
@@ -222,6 +222,18 @@ Add `find_user` fn in `users` db operation:
 - It finds whether the parameter is a user(id/name/email)
 - Fetches the user based on the parameter type
 - Returns a QueryResult
+
+Add `verify_password` fn in `users` db operation:
+- It accepts 2 parameter which is:
+    * A `User` instance
+    * A `password
+- It compares if the password matches
+- Returns a boolean value
+#### Part 2 - Add form model for Login
+Add `LoginForm` struct in `users` model to represent Login Form data:
+- It has 2 fields:
+    * `identifier`: Username/Email, is a string
+    * `Password`: Is a string
 
 ## Resources
 - [Postgress](https://www.cherryservers.com/blog/how-to-install-and-setup-postgresql-server-on-ubuntu-20-04)

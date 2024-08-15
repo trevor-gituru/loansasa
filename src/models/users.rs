@@ -27,3 +27,10 @@ pub struct RegisterForm {
     pub email: String,
     pub password: String,
 }
+
+#[derive(Debug, Deserialize, Clone)]
+
+pub struct LoginForm {
+    pub identifier: String,
+    pub password: String,
+}

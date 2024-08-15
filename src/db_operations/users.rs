@@ -39,3 +39,12 @@ pub fn find_user(
         return users.filter(name.eq(field)).first(conn);
     }
 }
+pub fn verify_password(test_user: &User, test_passw: &str)-> bool{
+    if test_user.password == test_passw{
+        true
+    }
+    else
+    {
+        false
+    }
+}
