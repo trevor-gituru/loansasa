@@ -206,10 +206,12 @@ In `ui` models add `LogInTemplate`:
 #### Part 3 - get controller
 Add 'login_get` in controllers module:
 - It renders an empty `LogInTemplate`
-
-
+#### Part 4 - login route
+In `main` module:
 - add `login` route which uses the `login_get` controller
 - Import `login_get` controller from `auth`
+
+In `register` html template, add the `/login` route
 
 ## Resources
 - [Postgress](https://www.cherryservers.com/blog/how-to-install-and-setup-postgresql-server-on-ubuntu-20-04)
