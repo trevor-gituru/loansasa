@@ -12,3 +12,4 @@ r2d2 = "0.8"  # Connection pooling
 dotenv = "0.15"  # For reading environment variables
 chrono = "0.4"  # Used for DateTime
 serde = { version = "1.0", features = ["derive"] } # Used deserialize form data
+regex = "1.10" # Allow use of regex

@@ -213,6 +213,16 @@ In `main` module:
 
 In `register` html template, add the `/login` route
 
+### 9. Add POST controller for login
+#### Part 1 - Add dB operation to find user
+Add `find_user` fn in `users` db operation:
+- It accepts 2 parameter which is:
+    * a string
+    * A DatabaseConnection
+- It finds whether the parameter is a user(id/name/email)
+- Fetches the user based on the parameter type
+- Returns a QueryResult
+
 ## Resources
 - [Postgress](https://www.cherryservers.com/blog/how-to-install-and-setup-postgresql-server-on-ubuntu-20-04)
 - [Actix](https://actix.rs/docs/getting-started/)
