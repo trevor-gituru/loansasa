@@ -193,8 +193,15 @@ In `auth` controller module add the `register_error` fn to handle errors during 
     3. the HTTP status 
 - It renders the register template based above info
 - It returns a HTTP Response bases on the status code
+### 8. Add Get controller for Login
+#### Part 1 - UI
+In templates, create the login html template based on register html template:
+- email field
+- password field
+- error field
 ## Resources
 - [Postgress](https://www.cherryservers.com/blog/how-to-install-and-setup-postgresql-server-on-ubuntu-20-04)
 - [Actix](https://actix.rs/docs/getting-started/)
 - [Register template](https://codepen.io/CrisD3v/pen/abPjQQv)
 - [diesel](https://diesel.rs/guides/getting-started)
+- [bootstrap](https://getbootstrap.com/docs/4.0/layout/overview/)

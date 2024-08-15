@@ -28,7 +28,7 @@ pub async fn register_post(
         Ok(mut conn) => {
             match create_user(&new_user, &mut conn) {
                 Ok(user) => {
-                    println!("Successfully created user:\n: {user:#?}");
+                    println!("Successfully created user:\n{user:#?}");
                     handle_login(user)
                 }
                 Err(e) => {
@@ -72,7 +72,9 @@ fn register_error(fail_user: &NewUser<'_>, err: &str, stats: u8) -> HttpResponse
 }
 
 fn handle_login(user: User) -> HttpResponse {
-    HttpResponse::Ok().body(format!("Successfully created\n{:#?}", user))
+    HttpResponse::Ok().body(format!("Successfully created\nid: {}\nname:\
+    {}\nemail: {}\npassword: {}\ncreated_at: {}\n", user.id, user.name, user.email, 
+    user.password, user.created_at))
 }
 
 
