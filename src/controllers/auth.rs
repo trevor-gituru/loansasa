@@ -2,9 +2,9 @@ use actix_web::{HttpResponse, Responder, web};
 use askama::Template;
 use crate::db_operations::users::create_user;
 use crate::models::app_state::AppState;
-use crate::models::ui::{RegisterTemplate};
+use crate::models::ui::{RegisterTemplate, LoginTemplate};
 use crate::models::users::{NewUser, RegisterForm, User};
-
+// Get Controllers
 pub async fn register_get() -> impl Responder {
     let template = RegisterTemplate{
         name: "",
@@ -13,6 +13,14 @@ pub async fn register_get() -> impl Responder {
     };
     HttpResponse::Ok().content_type("text/html").body(template.render().unwrap())
 }
+pub async fn login_get() -> impl Responder {
+    let template = LoginTemplate{
+        email: "",
+        error : None,
+    };
+    HttpResponse::Ok().content_type("text/html").body(template.render().unwrap())
+}
+// Post Controllers
 pub async fn register_post(
     reg_form: web::Form<RegisterForm>, 
     app_state: web::Data<AppState>
@@ -50,7 +58,7 @@ pub async fn register_post(
     }
 
 }
-
+// Error Handlers
 fn register_error(fail_user: &NewUser<'_>, err: &str, stats: u8) -> HttpResponse {
     let template = RegisterTemplate{
         name: &fail_user.name,

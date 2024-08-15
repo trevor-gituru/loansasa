@@ -203,6 +203,14 @@ In `templates`, create the login html template based on register html template:
 In `ui` models add `LogInTemplate`:
 - email field
 - error field
+#### Part 3 - get controller
+Add 'login_get` in controllers module:
+- It renders an empty `LogInTemplate`
+
+
+- add `login` route which uses the `login_get` controller
+- Import `login_get` controller from `auth`
+
 ## Resources
 - [Postgress](https://www.cherryservers.com/blog/how-to-install-and-setup-postgresql-server-on-ubuntu-20-04)
 - [Actix](https://actix.rs/docs/getting-started/)
