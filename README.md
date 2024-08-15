@@ -170,6 +170,29 @@ where:
         + Takes 2 parameters, the `NewUser` reference & Pgconnection
         + Inserts user into dB
         + Returns the QueryResult
+
+### 8. Add POST controller for register
+#### Part 1
+In `auth` controller module add the `register_post` fn:
+- Extracts the form data & App state
+- Creates a `NewUser` based form data
+- Attempts get DB Connection from pool
+- If Successful then:
+    * Attemps to add user details to DB
+    * If successful:
+        + Uses `handle_login` fn to redirect user to dashboard.
+    * Else:
+        + Uses `register_error` fn to handle this error
+- Else: 
+    * Uses `register_error` fn to handle this error
+#### Part 2
+In `auth` controller module add the `register_error` fn to handle errors during registration:
+- It accepts:
+    1. the failed user creation info,
+    2. Error message
+    3. the HTTP status 
+- It renders the register template based above info
+- It returns a HTTP Response bases on the status code
 ## Resources
 - [Postgress](https://www.cherryservers.com/blog/how-to-install-and-setup-postgresql-server-on-ubuntu-20-04)
 - [Actix](https://actix.rs/docs/getting-started/)
