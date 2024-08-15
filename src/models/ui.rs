@@ -7,3 +7,10 @@ pub struct RegisterTemplate<'a>{
     pub email: &'a str,
     pub error: Option<&'a str>,
 }
+
+#[derive(Template)]
+#[template(path = "login.html")]
+pub struct LoginTemplate<'a>{
+    pub email: &'a str,
+    pub error: Option<&'a str>,
+}
