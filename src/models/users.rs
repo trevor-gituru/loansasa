@@ -2,7 +2,7 @@ use diesel::prelude::*;
 use chrono::NaiveDateTime;
 use serde::Deserialize;
 
-#[derive(Queryable, Selectable)]
+#[derive(Debug, Queryable, Selectable)]
 #[diesel(table_name = crate::schema::users)]
 #[diesel(check_for_backend(diesel::pg::Pg))] 
 pub struct User {
@@ -13,7 +13,7 @@ pub struct User {
     pub created_at: NaiveDateTime,
 }
 
-#[derive(Insertable)]
+#[derive(Insertable, Debug)]
 #[diesel(table_name = crate::schema::users)]
 pub struct NewUser <'a> {
     pub name: &'a str,
@@ -21,7 +21,7 @@ pub struct NewUser <'a> {
     pub password: &'a str,
 }
 
-#[derive(Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct RegisterForm {
     pub name: String,
     pub email: String,
