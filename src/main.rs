@@ -5,7 +5,7 @@ mod schema;
 
 use actix_web::{web, App, HttpServer};
 use actix_files::Files;
-use crate::controllers::auth::{register_get, login_get,register_post};
+use crate::controllers::auth::{register_get, login_get,register_post, login_post};
 use crate::db_operations::db::establish_connection;
 use crate::models::app_state::AppState;
 
@@ -21,9 +21,15 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .app_data(web::Data::new(app_state.clone()))
             .service(Files::new("/assets", "./assets"))
-            .route("/register", web::get().to(register_get))
-            .route("/login", web::get().to(login_get))
-            .route("/register", web::post().to(register_post))
+            .service(
+                web::scope("/auth")
+                .route("/register", web::get().to(register_get))
+                .route("/login", web::get().to(login_get))
+                .route("/register", web::post().to(register_post))
+                .route("/login", web::post().to(login_post))
+            )
+            
+
     })
     .bind(("127.0.0.1", 8080))?
     .run()

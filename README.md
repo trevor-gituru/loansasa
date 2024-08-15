@@ -1,4 +1,8 @@
 ## Tasks
+## Section A - Authentication
+
+**NB**// All routes for authentication will have a scope of `/auth` 
+
 ### 0. Create rust project
 - Install rust language and create the `loansasa` project as follows:
 ```bash
@@ -17,6 +21,8 @@ $ cd loansasa
     * Import the `web` & `App` mod from `AW`
     * Create a new `App` instance in the `HTTPServer`
     * Add a `route` to `/register` and use the `register_get` controller to handle it
+
+
 - Add the `askama`(**A**) dependecy to handle dynamic rendering of web pages
 - Create a `models` package in `src` to handle objects:
     * Make a `mod.rs` which holds the package modules.
@@ -219,6 +225,7 @@ Add `find_user` fn in `users` db operation:
 - It accepts 2 parameter which is:
     * a string
     * A DatabaseConnection
+- Add `regex` dependency to use regular expressions
 - It finds whether the parameter is a user(id/name/email)
 - Fetches the user based on the parameter type
 - Returns a QueryResult
@@ -242,6 +249,13 @@ Add `login_post` fn in `auth` controller:
 - It then attempts to find the user based on the `identifier` field given
 - Afterwards it verifies if the identified user has same password as one provided
 - Once all above returns true it then calls the `handle_login` function
+#### Part 4 - Add post route
+In `main` module:
+- add `login` route which uses the `login_post` controller
+- Import `login_post` controller from `auth`
+
+## Section B - Session Management
+### 0. 
 
 
 ## Resources

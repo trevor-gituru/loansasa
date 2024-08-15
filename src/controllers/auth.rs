@@ -70,7 +70,7 @@ pub async fn login_post(
                 Ok(user) => {
                     match verify_password(&user, &login_form.password){
                         true => {
-                            println!("{} successfully logged in\n", user.name);
+                            println!("{} successfully logged in\n", user.id);
                             handle_login(user)
                         }
                         false => {
