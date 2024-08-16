@@ -5,7 +5,7 @@ edition = "2021"
 
 [dependencies]
 actix-web = "4.0" # Web server
-askama = "0.11"   # Dynamic rendering
+askama = "0.12.1"   # Dynamic rendering
 actix-files = "0.6.6" # Static rendering
 diesel = { version = "2.0.0", features = ["chrono", "postgres", "r2d2"] } # Postgres ORM
 r2d2 = "0.8"  # Connection pooling
@@ -14,5 +14,5 @@ chrono = "0.4"  # Used for DateTime
 serde = { version = "1.0", features = ["derive"] } # Used deserialize form data
 regex = "1.10" # Allow use of regex
 rand = "0.8" # Generate random data
-redis = "0.24" # Store session data
-r2d2-redis = "0.8"   # Redis connection manager for r2d2
+redis = "0.26.1" # Store session data
+r2d2_redis = "0.14.0"   # Redis connection manager for r2d2

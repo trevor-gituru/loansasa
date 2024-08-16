@@ -11,7 +11,7 @@ fn connect_redis() -> Connection {
 
 
     // Create a Redis client with the specified URL
-    let client = Client::open(redis_url).expect("Invalid Redis URL");
+    let client = Client::open(&*redis_url).expect("Invalid Redis URL");
 
     // Get a connection from the client
     client.get_connection().expect("Failed to connect to Redis")

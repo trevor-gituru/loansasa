@@ -1,11 +1,14 @@
 use diesel::r2d2::{self, ConnectionManager, Pool};
 use diesel::pg::PgConnection;
 use dotenv::dotenv;
+use r2d2_redis::RedisConnectionManager;
 
 use std::env;
 
 // Define a type alias for the connection pool
 pub type DbPool = Pool<ConnectionManager<PgConnection>>;
+pub type RedisPool = Pool<RedisConnectionManager>;
+
 
 // Function to create the database pool
 pub fn establish_db_connection() -> DbPool {
@@ -22,4 +25,22 @@ pub fn establish_db_connection() -> DbPool {
         .max_size(15) // Set the maximum number of connections in the pool
         .build(manager)
         .expect("Failed to create pool.")
+}
+
+// Function to create the Redis connection pool
+pub fn establish_redis_connection() -> RedisPool {
+    // Load environment variables from .env file
+    dotenv().ok();
+
+    // Get the Redis URL from environment variables
+    let redis_url = env::var("REDIS_URL").expect("REDIS_URL must be set");
+
+    // Create the Redis connection manager
+    let manager = RedisConnectionManager::new(redis_url).unwrap();
+
+    // Build the Redis connection pool
+    Pool::builder()
+        .max_size(15) // Set the maximum number of connections in the pool
+        .build(manager)
+        .expect("Failed to create Redis pool")
 }
