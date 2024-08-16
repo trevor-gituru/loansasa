@@ -954,6 +954,7 @@ dependencies = [
  "redis 0.26.1",
  "regex",
  "serde",
+ "serde_json",
 ]
 
 [[package]]

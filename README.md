@@ -263,9 +263,8 @@ In `main` module:
     * Set expiration time to session 
 ### I. Server side
 #### 0. Generate secure session ID 
-- Create a `utils` module to holder utility functions & include it in main
 - Add the `rand` dependency to generate random data
-- Add the `session` submodule in `utils`
+- Add the `session` submodule in `db_operations`
     * Add the `generate_session_id` function which returns a unique and secure session id
     * The session id must be 32 bytes long and consist of only alphanumerical
 #### 1. Setup redis on machine
@@ -318,6 +317,18 @@ $ echo 'REDIS_URL=redis://:<password>@127.0.0.1/' >> .env
     * It creates and returns a connection pool
 - Add the `RedisPool` to the `AppState` structure and initialize it in the `app_state` in `main` fn
 
+#### 3. Setup Session Models
+For a session model, it would typically include the following fields:
+
+- **Session ID** (`session_id`): A unique identifier for the session. This could be a string generated using a secure method.
+- **User ID** (`user_id`): The ID of the user associated with the session.
+- **Created At** (`created_at`): A timestamp indicating when the session was created.
+- **IP Address** (`ip_address`): The IP address from which the session was initiated.
+- **User Agent** (`user_agent`): The user agent string from the browser or device initiating the session.
+These fields allow us to track and manage sessions effectively, including setting expiration times and associating sessions with users.
+- Add the following implementations:
+    * `new` that creates a session given the above values and has default duration of 30 minutes
+    * serializa and deserialize fn for naive_datetime
 ## Resources
 - [Postgress](https://www.cherryservers.com/blog/how-to-install-and-setup-postgresql-server-on-ubuntu-20-04)
 - [Actix](https://actix.rs/docs/getting-started/)

@@ -2,7 +2,6 @@ mod controllers;
 mod db_operations;
 mod models;
 mod schema;
-mod utils;
 
 use std::sync::Arc;
 
