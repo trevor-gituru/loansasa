@@ -8,7 +8,7 @@ use std::env;
 pub type DbPool = Pool<ConnectionManager<PgConnection>>;
 
 // Function to create the database pool
-pub fn establish_connection() -> DbPool {
+pub fn establish_db_connection() -> DbPool {
     // Load environment variables from .env file
     dotenv().ok(); 
     // Get the database URL from environment variables

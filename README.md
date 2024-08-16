@@ -307,7 +307,12 @@ OK
 127.0.0.1:6379> exit
 $
 ```
-
+#### 2. Setup redis connection
+- Add `redis` url as follows, replacing `<password>` with you're redis password:
+```bash
+$ echo 'REDIS_URL=redis://:<password>@127.0.0.1/' >> .env
+```
+- Add `redis` dependency to store session data and `r2d2-redis` to handle redis connection pools
 
 ## Resources
 - [Postgress](https://www.cherryservers.com/blog/how-to-install-and-setup-postgresql-server-on-ubuntu-20-04)

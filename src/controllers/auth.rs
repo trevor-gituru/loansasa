@@ -32,7 +32,7 @@ pub async fn register_post(
         password: &reg_form.password,
     };
     println!("\n\nRegistration Data is:\n{:#?}", new_user);
-    match app_state.pool.get() {
+    match app_state.db_pool.get() {
         Ok(mut conn) => {
             match create_user(&new_user, &mut conn) {
                 Ok(user) => {
@@ -64,7 +64,7 @@ pub async fn login_post(
     app_state: web::Data<AppState>
 ) -> impl Responder {
     println!("\n\nLog In Data is:\n{:#?}", login_form);
-    match app_state.pool.get() {
+    match app_state.db_pool.get() {
         Ok(mut conn) => {
             match find_user(&login_form.identifier, &mut conn) {
                 Ok(user) => {
