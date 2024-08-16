@@ -268,6 +268,45 @@ In `main` module:
 - Add the `session` submodule in `utils`
     * Add the `generate_session_id` function which returns a unique and secure session id
     * The session id must be 32 bytes long and consist of only alphanumerical
+#### 1. Setup redis on machine
+- Install the redis server:
+```bash
+$ sudo apt install redis-server
+```
+ - Change supervised state to systemd if running on ubuntu, on the following line
+ ```bash
+$ sudo grep -n "^supervised" /etc/redis/redis.conf
+236:supervised systemd
+```
+- Add redis password as follows, by changing `foobared` to required password
+```bash
+$ sudo grep -n "^# requirepass" /etc/redis/redis.conf
+739:# requirepass foobared
+```
+- Make sure the redis is bound to localhost:
+```bash
+$ sudo grep -n "^bind" /etc/redis/redis.conf
+68:bind 127.0.0.1 ::1
+```
+- Restart redis and check to see if changes have been applied
+```bash
+$ sudo systemctl restart redis
+$ sudo netstat -lnp | grep redis
+tcp        0      0 127.0.0.1:6379          0.0.0.0:*               LISTEN      11160/redis-server  
+tcp6       0      0 ::1:6379                :::*                    LISTEN      11160/redis-server  
+```
+- To test if one is able to enter and fetch data (replace `password` with you're password):
+```bash
+$ redis-cli
+127.0.0.1:6379> auth <password>
+OK
+127.0.0.1:6379> set key1 10
+OK
+127.0.0.1:6379> get key1
+"10"
+127.0.0.1:6379> exit
+$
+```
 
 
 ## Resources
@@ -276,3 +315,4 @@ In `main` module:
 - [Register template](https://codepen.io/CrisD3v/pen/abPjQQv)
 - [diesel](https://diesel.rs/guides/getting-started)
 - [bootstrap](https://getbootstrap.com/docs/4.0/layout/overview/)
+- [Setup redis](https://www.digitalocean.com/community/tutorials/how-to-install-and-secure-redis-on-ubuntu-20-04)
