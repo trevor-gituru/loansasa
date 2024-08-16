@@ -895,6 +895,7 @@ dependencies = [
  "diesel",
  "dotenv",
  "r2d2",
+ "rand",
  "regex",
  "serde",
 ]

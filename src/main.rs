@@ -2,6 +2,7 @@ mod controllers;
 mod db_operations;
 mod models;
 mod schema;
+mod utils;
 
 use actix_web::{web, App, HttpServer};
 use actix_files::Files;

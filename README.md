@@ -255,7 +255,19 @@ In `main` module:
 - Import `login_post` controller from `auth`
 
 ## Section B - Session Management
-### 0. 
+### AIM
+- Once a user log in or register, a new session is created
+- On server side:
+    * Generates a new session id for user 
+    * `redis` is used to store session id for user and respective data
+    * Set expiration time to session 
+### I. Server side
+#### 0. Generate secure session ID 
+- Create a `utils` module to holder utility functions & include it in main
+- Add the `rand` dependency to generate random data
+- Add the `session` submodule in `utils`
+    * Add the `generate_session_id` function which returns a unique and secure session id
+    * The session id must be 32 bytes long and consist of only alphanumerical
 
 
 ## Resources
