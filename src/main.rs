@@ -2,6 +2,7 @@ mod controllers;
 mod db_operations;
 mod models;
 mod schema;
+mod utils;
 
 use std::sync::Arc;
 
@@ -10,7 +11,7 @@ use actix_files::Files;
 use crate::controllers::auth::{register_get, login_get,register_post, login_post};
 use crate::db_operations::connections::{establish_db_connection, establish_redis_connection};
 use crate::models::app_state::AppState;
-
+use crate::controllers::tests::client;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -35,6 +36,11 @@ async fn main() -> std::io::Result<()> {
                 .route("/register", web::post().to(register_post))
                 .route("/login", web::post().to(login_post))
             )
+            .service(
+                web::scope("/tests")
+                .route("/client", web::get().to(client))
+            )
+
             
 
     })

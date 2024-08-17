@@ -17,3 +17,4 @@ rand = "0.8" # Generate random data
 redis = "0.26.1" # Store session data
 r2d2_redis = "0.14.0"   # Redis connection manager for r2d2
 serde_json = "1.0.125"
+

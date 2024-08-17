@@ -329,6 +329,10 @@ These fields allow us to track and manage sessions effectively, including settin
 - Add the following implementations:
     * `new` that creates a session given the above values and has default duration of 30 minutes
     * serializa and deserialize fn for naive_datetime
+#### 3. Fetch client ip & user agent
+Create a `client_info` submodule in `utils` module to fetch info of the client
+- Add `get_ip` to get client ip address (either from reverse proxy or direct connection) or return `unknown` if cannot get
+- Add `get_browser` to get client browser or return `unknown` if cannot get
 ## Resources
 - [Postgress](https://www.cherryservers.com/blog/how-to-install-and-setup-postgresql-server-on-ubuntu-20-04)
 - [Actix](https://actix.rs/docs/getting-started/)
