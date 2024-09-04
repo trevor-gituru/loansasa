@@ -1,4 +1,4 @@
-## Tasks
+# Tasks
 ## Section A - Authentication
 
 **NB**// All routes for authentication will have a scope of `/auth` 
@@ -341,16 +341,34 @@ Create a `client_info` submodule in `utils` module to fetch info of the client
     * Create a new session module
     * Store the session in the redis database with its id as its key and session object as json
     * Set it to expire after 30 minutes
-    * It should return a `R
+    * Create a new cookie based on session
+    * It should return the cookie
 
 #### 5. Handle login controller
 - In the `auth` controller add the `handle_login` fn which will:
     * Create a new session for the user
     * Send the `session_id` to user as cookie
-    * Take them to their homepage
+    * Redirect to the `/dashboard`
+#### 6. Check session
+- Create a `check_session` fn in `db_operations::session`:
+    * It will check for a given user whether session exists via cookie
+    * Returns a boolean value
 
 ## Section C - Dashboard
-## Resources
+###  I. Frontend
+#### 0. Create dashboard page
+- Create the `dashboard.html` & `dashboard.css` file in templates and assets respectively
+- Create the `DashBoardTemplate` in `ui` models 
+### II.  Backeend
+#### 0. Serve dashboard page
+- Add the `/dashboard` route in the `main`
+- Create `dashboard` module controller
+- In above controller, create the `dashboard_get` function:
+    * To render dashboard page
+    * Uses `check_session` to chek if session exists
+    * If it does render dashboard page
+    * Otherwise redirect user to `/auth/login`
+# Resources
 - [Postgress](https://www.cherryservers.com/blog/how-to-install-and-setup-postgresql-server-on-ubuntu-20-04)
 - [Actix](https://actix.rs/docs/getting-started/)
 - [Register template](https://codepen.io/CrisD3v/pen/abPjQQv)

@@ -1,6 +1,7 @@
 use diesel::prelude::*;
 use chrono::NaiveDateTime;
 use serde::Deserialize;
+use std::fmt;
 
 #[derive(Debug, Queryable, Selectable)]
 #[diesel(table_name = crate::schema::users)]
@@ -32,4 +33,12 @@ pub struct RegisterForm {
 pub struct LoginForm {
     pub identifier: String,
     pub password: String,
+}
+
+impl fmt::Display for User {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "User {{\n\tid: {},\n\tname:\
+        {},\n\temail: {},\n\tpassword: {},\n\tcreated_at: {}\n}}", self.id, self.name, self.email, 
+        self.password, self.created_at)
+    }
 }

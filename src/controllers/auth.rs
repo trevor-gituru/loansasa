@@ -44,7 +44,8 @@ pub async fn register_post(
         Ok(mut conn) => {
             match create_user(&new_user, &mut conn) {
                 Ok(user) => {
-                    println!("Successfully created user:\n{user:#?}");
+                    println!("Successfully created user:\n{user}");
+                    
                     handle_login(user, app_state.redis_pool.clone(), req).await
                 }
                 Err(e) => {
@@ -156,11 +157,10 @@ async fn handle_login(
             user.id).await;
         
         println!("{} successfully logged in\n", user.id);
-        HttpResponse::Ok()
-            .cookie(user_session)    
-            .body(format!("Welcome\nid: {}\nname:\
-            {}\nemail: {}\npassword: {}\ncreated_at: {}\n", user.id, user.name, user.email, 
-            user.password, user.created_at))
+        HttpResponse::Found()
+            .insert_header(("LOCATION", "/dashboard"))
+            .cookie(user_session)
+            .finish()
 }
 
 
