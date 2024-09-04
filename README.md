@@ -262,12 +262,7 @@ In `main` module:
     * `redis` is used to store session id for user and respective data
     * Set expiration time to session 
 ### I. Server side
-#### 0. Generate secure session ID 
-- Add the `rand` dependency to generate random data
-- Add the `session` submodule in `db_operations`
-    * Add the `generate_session_id` function which returns a unique and secure session id
-    * The session id must be 32 bytes long and consist of only alphanumerical
-#### 1. Setup redis on machine
+#### 0. Setup redis on machine
 - Install the redis server:
 ```bash
 $ sudo apt install redis-server
@@ -306,7 +301,7 @@ OK
 127.0.0.1:6379> exit
 $
 ```
-#### 2. Setup redis connection pool
+#### 1. Setup redis connection pool
 - Add `redis` url as follows, replacing `<password>` with you're redis password:
 ```bash
 $ echo 'REDIS_URL=redis://:<password>@127.0.0.1/' >> .env
@@ -317,7 +312,7 @@ $ echo 'REDIS_URL=redis://:<password>@127.0.0.1/' >> .env
     * It creates and returns a connection pool
 - Add the `RedisPool` to the `AppState` structure and initialize it in the `app_state` in `main` fn
 
-#### 3. Setup Session Models
+#### 2. Setup Session Models
 For a session model, it would typically include the following fields:
 
 - **Session ID** (`session_id`): A unique identifier for the session. This could be a string generated using a secure method.
@@ -333,6 +328,28 @@ These fields allow us to track and manage sessions effectively, including settin
 Create a `client_info` submodule in `utils` module to fetch info of the client
 - Add `get_ip` to get client ip address (either from reverse proxy or direct connection) or return `unknown` if cannot get
 - Add `get_browser` to get client browser or return `unknown` if cannot get
+
+#### 4. Generate secure session ID 
+- Add the `rand` dependency to generate random data
+- Add the `session` submodule in `db_operations`
+    * Add the `generate_session_id` function which returns a unique and secure session id
+    * The session id must be 32 bytes long and consist of only alphanumerical
+    * This process repeats until a unique session id is generated which doesnt exist in redis database, and returns the id
+
+#### 4. Create and store session
+- Create a `create_session` fn in the `db_operations::session` module that will:
+    * Create a new session module
+    * Store the session in the redis database with its id as its key and session object as json
+    * Set it to expire after 30 minutes
+    * It should return a `R
+
+#### 5. Handle login controller
+- In the `auth` controller add the `handle_login` fn which will:
+    * Create a new session for the user
+    * Send the `session_id` to user as cookie
+    * Take them to their homepage
+
+## Section C - Dashboard
 ## Resources
 - [Postgress](https://www.cherryservers.com/blog/how-to-install-and-setup-postgresql-server-on-ubuntu-20-04)
 - [Actix](https://actix.rs/docs/getting-started/)

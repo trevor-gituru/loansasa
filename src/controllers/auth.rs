@@ -1,9 +1,16 @@
-use actix_web::{HttpResponse, Responder, web};
+use actix_web::{HttpResponse, HttpRequest, Responder, web};
 use askama::Template;
+use std::sync::Arc;
+
 use crate::db_operations::users::{create_user, verify_password, find_user};
+use crate::db_operations::session::create_session;
+use crate::db_operations::connections::RedisPool;
 use crate::models::app_state::AppState;
 use crate::models::ui::{RegisterTemplate, LoginTemplate};
 use crate::models::users::{User, NewUser, RegisterForm, LoginForm};
+
+
+
 // Get Controllers
 pub async fn register_get() -> impl Responder {
     let template = RegisterTemplate{
@@ -23,7 +30,8 @@ pub async fn login_get() -> impl Responder {
 // Post Controllers
 pub async fn register_post(
     reg_form: web::Form<RegisterForm>, 
-    app_state: web::Data<AppState>
+    app_state: web::Data<AppState>,
+    req: HttpRequest
 ) -> impl Responder {
     
     let new_user = NewUser {
@@ -37,7 +45,7 @@ pub async fn register_post(
             match create_user(&new_user, &mut conn) {
                 Ok(user) => {
                     println!("Successfully created user:\n{user:#?}");
-                    handle_login(user)
+                    handle_login(user, app_state.redis_pool.clone(), req).await
                 }
                 Err(e) => {
                     let msg = "Username or email already exists:\n";
@@ -61,7 +69,8 @@ pub async fn register_post(
 
 pub async fn login_post(
     login_form: web::Form<LoginForm>, 
-    app_state: web::Data<AppState>
+    app_state: web::Data<AppState>,
+    req: HttpRequest
 ) -> impl Responder {
     println!("\n\nLog In Data is:\n{:#?}", login_form);
     match app_state.db_pool.get() {
@@ -70,8 +79,7 @@ pub async fn login_post(
                 Ok(user) => {
                     match verify_password(&user, &login_form.password){
                         true => {
-                            println!("{} successfully logged in\n", user.id);
-                            handle_login(user)
+                            handle_login(user, app_state.redis_pool.clone(), req).await
                         }
                         false => {
                             let msg = "Username/Email and password do not match :\n";
@@ -136,10 +144,24 @@ fn login_error(fail_identifier: &str, err: &str, stats: u8) -> HttpResponse {
         }
     }
 }
-fn handle_login(user: User) -> HttpResponse {
-    HttpResponse::Ok().body(format!("Welcome\nid: {}\nname:\
-    {}\nemail: {}\npassword: {}\ncreated_at: {}\n", user.id, user.name, user.email, 
-    user.password, user.created_at))
+async fn handle_login(
+    user: User,
+    redis_pool: Arc<RedisPool>,
+    req: HttpRequest) -> HttpResponse {
+        let mut conn = redis_pool.get().await.expect("Error getting redis connection");
+        
+        let user_session = create_session(
+            &mut conn, 
+            req, 
+            user.id).await;
+        
+        println!("{} successfully logged in\n", user.id);
+        HttpResponse::Ok()
+            .cookie(user_session)    
+            .body(format!("Welcome\nid: {}\nname:\
+            {}\nemail: {}\npassword: {}\ncreated_at: {}\n", user.id, user.name, user.email, 
+            user.password, user.created_at))
 }
+
 
 

@@ -11,7 +11,7 @@ use actix_files::Files;
 use crate::controllers::auth::{register_get, login_get,register_post, login_post};
 use crate::db_operations::connections::{establish_db_connection, establish_redis_connection};
 use crate::models::app_state::AppState;
-use crate::controllers::tests::client;
+use crate::controllers::tests::{client, test_redis};
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -39,6 +39,7 @@ async fn main() -> std::io::Result<()> {
             .service(
                 web::scope("/tests")
                 .route("/client", web::get().to(client))
+                .route("/redis", web::get().to(test_redis))
             )
 
             
