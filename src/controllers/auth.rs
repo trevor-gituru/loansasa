@@ -3,7 +3,7 @@ use askama::Template;
 use std::sync::Arc;
 
 use crate::db_operations::users::{create_user, verify_password, find_user};
-use crate::db_operations::session::create_session;
+use crate::db_operations::session::{check_session, create_session, delete_session};
 use crate::db_operations::connections::RedisPool;
 use crate::models::app_state::AppState;
 use crate::models::ui::{RegisterTemplate, LoginTemplate};
@@ -161,6 +161,25 @@ async fn handle_login(
             .insert_header(("LOCATION", "/dashboard"))
             .cookie(user_session)
             .finish()
+}
+
+pub async fn logout(
+    app_state: web::Data<AppState>,
+    req: HttpRequest) -> impl Responder {
+        let err_msg = "Error getting redis connection in logout";
+        let mut conn = app_state.redis_pool.get().await.expect(&err_msg);
+        // Create a base response with a redirect
+        if check_session(&mut conn, &req).await {
+            let empty_cookie = delete_session(&mut conn, &req).await;
+            HttpResponse::Found()
+            .insert_header(("LOCATION", "/auth/login"))
+            .cookie(empty_cookie)
+            .finish()
+        } else {
+        HttpResponse::Found()
+            .insert_header(("LOCATION", "/auth/login"))
+            .finish()
+        }
 }
 
 

@@ -354,7 +354,23 @@ Create a `client_info` submodule in `utils` module to fetch info of the client
     * It will check for a given user whether session exists via cookie
     * Returns a boolean value
 
+#### 7. Delete session
+- Create the `delete_session` fn in `session` operations:
+    * It deletes the session from redis
+    * Returns an empty session cookie that has 0 duration
+- Add the `logout` fn in `auth`:
+    * It checks if session exists
+    * If it does:
+        + Delete session
+        + Redirect to login page
+        + Set session cookie to empty
+    * Else:
+        + Redirect to login page
+        + Do not set a new cookie
+- Add the `/logout` route and set `logout` as controller
 ## Section C - Dashboard
+**NB//** Scope used is `/dashboard`
+
 ###  I. Frontend
 #### 0. Create dashboard page
 - Create the `dashboard.html` & `dashboard.css` file in templates and assets respectively

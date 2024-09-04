@@ -8,11 +8,16 @@ use std::sync::Arc;
 
 use actix_web::{web, App, HttpServer};
 use actix_files::Files;
-use crate::controllers::auth::{register_get, login_get,register_post, login_post};
+use crate::controllers::auth::{register_get,
+    login_get,register_post,
+    login_post,
+    logout};
 use crate::controllers::dashboard::dashboard_get;
-use crate::db_operations::connections::{establish_db_connection, establish_redis_connection};
+use crate::db_operations::connections::{establish_db_connection,
+    establish_redis_connection};
 use crate::models::app_state::AppState;
-use crate::controllers::tests::{client, test_redis};
+use crate::controllers::tests::{client,
+    test_redis};
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -34,6 +39,7 @@ async fn main() -> std::io::Result<()> {
                 web::scope("/auth")
                 .route("/register", web::get().to(register_get))
                 .route("/login", web::get().to(login_get))
+                .route("/logout", web::get().to(logout))
                 .route("/register", web::post().to(register_post))
                 .route("/login", web::post().to(login_post))
             )

@@ -59,7 +59,7 @@ pub async fn create_session (
 
 pub async fn check_session (
     conn: &mut Connection,
-    req: HttpRequest) -> bool{
+    req: &HttpRequest) -> bool{
         // Get cookies from the request
         let session_cookies = req.cookie("session_id");
         if session_cookies.is_none(){
@@ -72,6 +72,25 @@ pub async fn check_session (
         let err_msg = "Error check existance of session id in check_session";
         let exists: bool = conn.exists(&key).await.expect(err_msg);
         exists
+}
+
+pub async fn delete_session (
+    conn: &mut Connection,
+    req: &HttpRequest) -> cookie::Cookie<'static>{
+        // Get cookies from the request
+        let session_cookies = req.cookie("session_id").unwrap();
+        let session_id = session_cookies.value();
+        let key = format!("Session:{}", &session_id);
+        let err_msg = "Error deleting session id in delete_session";
+        // Remove the session from Redis
+        let _: () = conn.del(&key).await.expect(&err_msg);
+        println!("{} was deleted", key);
+        // Create a cookie with the same name and an expired date to delete it
+        let cookie = cookie::Cookie::build("session_id", "")
+            .path("/")
+            .max_age(cookie::time::Duration::ZERO)
+            .finish();
+        cookie
 }
 
 

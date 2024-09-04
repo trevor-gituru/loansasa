@@ -9,7 +9,7 @@ pub async fn dashboard_get(
   app_state: web::Data<AppState>,
   req: HttpRequest) -> HttpResponse {
     let mut conn = app_state.redis_pool.get().await.unwrap();
-    if check_session(&mut conn, req).await {
+    if check_session(&mut conn, &req).await {
         println!("Session exists\n");
         let template = DashBoardTemplate{};
         HttpResponse::Ok().content_type("text/html").body(template.render().unwrap())
