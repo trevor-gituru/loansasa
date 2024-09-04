@@ -14,3 +14,6 @@ pub struct LoginTemplate<'a>{
     pub identifier: &'a str,
     pub error: Option<&'a str>,
 }
+#[derive(Template)]
+#[template(path = "dashboard.html")]
+pub struct DashBoardTemplate{}
