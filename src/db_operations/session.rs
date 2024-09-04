@@ -57,3 +57,21 @@ pub async fn create_session (
         cookie
 }
 
+pub async fn check_session (
+    conn: &mut Connection,
+    req: HttpRequest) -> bool{
+        // Get cookies from the request
+        let session_cookies = req.cookie("session_id");
+        if session_cookies.is_none(){
+            return false;
+        }
+        let session_cookies = session_cookies.unwrap();
+        let session_id = session_cookies.value();
+        let key = format!("Session:{}", &session_id);
+        println!("{}", key);
+        let err_msg = "Error check existance of session id in check_session";
+        let exists: bool = conn.exists(&key).await.expect(err_msg);
+        exists
+}
+
+
