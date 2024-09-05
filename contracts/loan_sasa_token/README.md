@@ -14,3 +14,21 @@ The `LoanSasaToken` contract in Cairo is designed to manage tokens on StarkNet. 
 - **Security**: Security considerations are critical, including checks for sufficient balances, proper allowance handling, and access controls to prevent misuse.
 
 - **Testing and Optimization**: This basic implementation serves as a demonstration. Production-ready contracts should be thoroughly tested, audited, and optimized to handle edge cases and ensure robustness.
+
+## Tasks
+### 0. Rename Contract
+- Rename all instances of `HelloStarknet` to `LoanSasaToken` and test it out as follows:
+ ```bash
+razaoul@razaoul-HP-ProBook-450-G4:~/loansasa/contracts/loan_sasa_token$: sed -i 's/HelloStarknet/LoanSasaToken/g' src/lib.cairo tests/test_contract.cairo
+razaoul@razaoul-HP-ProBook-450-G4:~/loansasa/contracts/loan_sasa_token$: snforge test
+   Compiling loan_sasa_token v0.1.0 (/home/razaoul/loansasa/contracts/loan_sasa_token/Scarb.toml)
+    Finished release target(s) in 2 seconds
+
+
+Collected 2 test(s) from loan_sasa_token package
+Running 0 test(s) from src/
+Running 2 test(s) from tests/
+[PASS] tests::test_contract::test_cannot_increase_balance_with_zero_value (gas: ~104)
+[PASS] tests::test_contract::test_increase_balance (gas: ~170)
+Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
+``` 

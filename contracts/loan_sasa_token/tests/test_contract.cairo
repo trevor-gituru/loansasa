@@ -2,10 +2,10 @@ use starknet::ContractAddress;
 
 use snforge_std::{declare, ContractClassTrait};
 
-use loan_sasa_token::IHelloStarknetSafeDispatcher;
-use loan_sasa_token::IHelloStarknetSafeDispatcherTrait;
-use loan_sasa_token::IHelloStarknetDispatcher;
-use loan_sasa_token::IHelloStarknetDispatcherTrait;
+use loan_sasa_token::ILoanSasaTokenSafeDispatcher;
+use loan_sasa_token::ILoanSasaTokenSafeDispatcherTrait;
+use loan_sasa_token::ILoanSasaTokenDispatcher;
+use loan_sasa_token::ILoanSasaTokenDispatcherTrait;
 
 fn deploy_contract(name: ByteArray) -> ContractAddress {
     let contract = declare(name).unwrap();
@@ -15,9 +15,9 @@ fn deploy_contract(name: ByteArray) -> ContractAddress {
 
 #[test]
 fn test_increase_balance() {
-    let contract_address = deploy_contract("HelloStarknet");
+    let contract_address = deploy_contract("LoanSasaToken");
 
-    let dispatcher = IHelloStarknetDispatcher { contract_address };
+    let dispatcher = ILoanSasaTokenDispatcher { contract_address };
 
     let balance_before = dispatcher.get_balance();
     assert(balance_before == 0, 'Invalid balance');
@@ -31,9 +31,9 @@ fn test_increase_balance() {
 #[test]
 #[feature("safe_dispatcher")]
 fn test_cannot_increase_balance_with_zero_value() {
-    let contract_address = deploy_contract("HelloStarknet");
+    let contract_address = deploy_contract("LoanSasaToken");
 
-    let safe_dispatcher = IHelloStarknetSafeDispatcher { contract_address };
+    let safe_dispatcher = ILoanSasaTokenSafeDispatcher { contract_address };
 
     let balance_before = safe_dispatcher.get_balance().unwrap();
     assert(balance_before == 0, 'Invalid balance');
