@@ -50,7 +50,7 @@ async fn main() -> std::io::Result<()> {
             )
             .service(
                 web::scope("/dashboard")
-                .default_service(web::route().to(dashboard_get))
+                .route("/{path}", web::get().to(dashboard_get))
             )
 
             
