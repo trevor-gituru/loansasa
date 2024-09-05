@@ -1,0 +1,41 @@
+body {
+    font-family: Arial, sans-serif;
+}
+.sidebar {
+    height: 100vh;
+    width: 250px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    background-color: #343a40;
+    padding-top: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+.sidebar .nav-item {
+    width: 100%;
+}
+.sidebar .nav-link {
+    color: #ffffff;
+    padding: 15px;
+    text-align: center;
+    transition: background-color 0.3s ease;
+}
+.sidebar .nav-link:hover {
+    background-color: #495057;
+}
+.sidebar .nav-link i {
+    margin-right: 10px;
+}
+.content {
+    margin-left: 260px;
+    padding: 20px;
+}
+.hidden {
+    display: none;
+}
+.nav-link.active {
+    background-color: #007bff; /* Bootstrap primary color or any color of your choice */
+    color: white; /* Text color for active link */
+}

@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registration</title>
+    <title>Log in</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/assets/images/loansasa.png">
     <!-- Bootstrap CSS -->
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
 </head>
@@ -16,23 +18,20 @@
                         <!-- Alert Message -->
                         {% if let Some(error_message) = error %}
                             <div class="alert alert-warning alert-dismissible fade show" role="alert">
-                                <strong>Warning</strong> {{ error_message }}
+                                <strong>Warning:</strong> {{ error_message }}
                                 <button type="button" class="close" data-dismiss="alert" aria-label="Close">
                                     <span aria-hidden="true">&times;</span>
                                 </button>
                             </div>
                         {% endif %}
 
-                        <h2 class="card-title text-center mb-4">Sign Up</h2>
-                        <form action="/auth/register" method="post">
+                        <h2 class="card-title text-center mb-4">Sign In</h2>
+                        <form action="/auth/login" method="post">
+                            
                             <div class="form-group">
-                                <label for="name">Username</label>
-                                <input type="text" class="form-control" id="name" name="name" value="{{ name }}" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="email">Email address</label>
-                                <input type="email" class="form-control" id="email" name="email" value="{{ email }}" required>
-                            </div>
+                                <label for="identifier">Username or Email</label>
+                                <input type="text" id="identifier" name="identifier" class="form-control" value="{{ identifier }}" autocorrect="off" autocapitalize="none" required>
+                              </div>
                             <div class="form-group">
                                 <label for="password">Password</label>
                                 <input type="password" class="form-control" id="password" name="password" required>
@@ -41,10 +40,10 @@
                                 <input type="checkbox" class="form-check-input" id="rememberMe">
                                 <label class="form-check-label" for="rememberMe">Remember me</label>
                             </div>
-                            <button type="submit" class="btn btn-primary btn-block">Create account</button>
+                            <button type="submit" class="btn btn-primary btn-block">Log In</button>
                         </form>
                         <div class="text-center mt-3">
-                            <a href="/auth/login">Log in</a>
+                            <a href="/auth/register">Create Account</a>
                         </div>
                     </div>
                 </div>

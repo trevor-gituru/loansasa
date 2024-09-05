@@ -373,16 +373,29 @@ Create a `client_info` submodule in `utils` module to fetch info of the client
 
 ###  I. Frontend
 #### 0. Create dashboard page
-- Create the `dashboard.html` & `dashboard.css` file in templates and assets respectively
-- Create the `DashBoardTemplate` in `ui` models 
+- Create the `dashboard` folder in `templates` to store dashboard html file
+- Create the `base.html` file which serves as base template for profile and homepage:
+     * Contain vertical nav-bar to load to following pages:
+        + Logout
+        + Profile
+        + My Loans
+        + Lenders
+     * Contains the `content` section from which other pages will be imported
+- Create simple welcome pages for the links in navbar which import the `base.html`
+- Create `ui` Templates for:
+    * Home
+    * Profile
+    * loans
+    * lenders
+
 ### II.  Backeend
 #### 0. Serve dashboard page
-- Add the `/dashboard` route in the `main`
+- Add the `/dashboard/{path}` route in the `main`
 - Create `dashboard` module controller
 - In above controller, create the `dashboard_get` function:
-    * To render dashboard page
+    * To render dashboard page based on the `path`
     * Uses `check_session` to chek if session exists
-    * If it does render dashboard page
+    * If it does render respective dashboard page
     * Otherwise redirect user to `/auth/login`
 # Resources
 - [Postgress](https://www.cherryservers.com/blog/how-to-install-and-setup-postgresql-server-on-ubuntu-20-04)
