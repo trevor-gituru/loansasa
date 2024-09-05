@@ -158,7 +158,7 @@ async fn handle_login(
         
         println!("{} successfully logged in\n", user.id);
         HttpResponse::Found()
-            .insert_header(("LOCATION", "/dashboard"))
+            .insert_header(("LOCATION", "/dashboard/home"))
             .cookie(user_session)
             .finish()
 }
