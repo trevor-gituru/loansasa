@@ -1,6 +1,6 @@
 use actix_web::{HttpResponse, HttpRequest, web};
 use askama::Template;
-use crate::models::ui::{HomeTemplate, LoansTemplate, ProfileTemplate};
+use crate::models::ui::{HomeTemplate, LoansTemplate, ProfileTemplate, LendersTemplate};
 use crate::models::app_state::AppState;
 use crate::db_operations::session::check_session;
 
@@ -16,6 +16,7 @@ pub async fn dashboard_get(
         let template = match page.as_str() {
             "profile" => ProfileTemplate{}.render(),
             "loans" => LoansTemplate{}.render(),
+            "lenders" => LendersTemplate{}.render(),
             _ => HomeTemplate{}.render(),
         };
         HttpResponse::Ok().content_type("text/html").body(template.unwrap())
