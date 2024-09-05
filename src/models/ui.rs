@@ -25,3 +25,7 @@ pub struct ProfileTemplate{}
 #[derive(Template)]
 #[template(path = "dashboard/loans.html")]
 pub struct LoansTemplate{}
+
+#[derive(Template)]
+#[template(path = "dashboard/lenders.html")]
+pub struct LendersTemplate{}
