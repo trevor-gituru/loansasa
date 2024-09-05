@@ -7,6 +7,14 @@ $ snfoundryup -v 0.27.0
 $ snforge --version
 snforge 0.27.0
 ```
+## 1. Create LoanSasaToken smart contract
+- To managing and issuing tokens within the LoanSasa ecosystem, create its smart contract
+```bash
+$ snforge init loan_sasa_token
+✔ Which test runner do you want to set up? · Starknet Foundry (default)
+    Updating git repository https://github.com/foundry-rs/starknet-foundry
+Created `loan_sasa_token` package.
+```
 
 # Resources
 - [starknet-foundry](https://github.com/foundry-rs/starknet-foundry)
