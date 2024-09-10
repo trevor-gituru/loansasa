@@ -2,11 +2,16 @@ use starknet::ContractAddress;
 
 #[starknet::interface]
 pub trait ILoanSasaToken<TContractState> {
+    // Getters
+    fn get_owner(self: @TContractState) -> ContractAddress;
+    fn name(self: @TContractState) -> felt252;
+    //Setters
     fn increase_balance(ref self: TContractState, amount: felt252);
     fn add_user(ref self: TContractState, username: felt252);
     fn get_balance(self: @TContractState) -> felt252;
     fn get_user(self: @TContractState) -> felt252;
-    fn get_owner(self: @TContractState) -> ContractAddress;
+    
+
 }
 
 #[starknet::contract]
@@ -51,6 +56,10 @@ mod LoanSasaToken {
 
         fn get_owner(self: @ContractState) -> ContractAddress {
             (self.owner.read())
+        }
+
+        fn name(self: @ContractState) -> felt252 {
+            ("LoanSasaToken")
         }
     }
 }

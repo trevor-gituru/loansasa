@@ -35,3 +35,13 @@ Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
 ``` 
 #### 1. Add owner
 - Add the `owner` variable to hold the account address of administrator of smart contract
+
+#### 2. Initialize owner
+- Create a constructor that takes in the `owner_account` and sets it to the `owner` storage
+
+#### 3. Fetch owner
+- Create a view function `get_owner` that fetches and returns the owner of the contract
+
+### Section B - Tokens
+#### 0. Create name of token
+- Create the `name` view function to return the name of the token
