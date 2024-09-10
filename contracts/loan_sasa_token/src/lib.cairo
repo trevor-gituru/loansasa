@@ -5,6 +5,9 @@ pub trait ILoanSasaToken<TContractState> {
     // Getters
     fn get_owner(self: @TContractState) -> ContractAddress;
     fn name(self: @TContractState) -> felt252;
+    fn symbol(self: @TContractState) -> felt252;
+    fn decimals(self: @TContractState) -> u8;
+    fn totalSupply(self: @TContractState) -> u256;
     //Setters
     fn increase_balance(ref self: TContractState, amount: felt252);
     fn add_user(ref self: TContractState, username: felt252);
@@ -16,7 +19,8 @@ pub trait ILoanSasaToken<TContractState> {
 
 #[starknet::contract]
 mod LoanSasaToken {
-    use starknet::storage::{
+    use super::ILoanSasaToken;
+use starknet::storage::{
         StoragePointerReadAccess, StoragePointerWriteAccess, StoragePathEntry, Map
     };
     use core::starknet::{ContractAddress, get_caller_address};
@@ -26,6 +30,7 @@ mod LoanSasaToken {
     struct Storage {
         balance: felt252,
         users: Map<ContractAddress, felt252>,
+        totalSupply: u256,
         owner: ContractAddress 
     }
 
@@ -53,13 +58,21 @@ mod LoanSasaToken {
         fn get_user(self: @ContractState) -> felt252 {
             self.users.entry(get_caller_address()).read()
         }
-
+        // Getters
         fn get_owner(self: @ContractState) -> ContractAddress {
             (self.owner.read())
         }
-
         fn name(self: @ContractState) -> felt252 {
-            ("LoanSasaToken")
+            ('LoanSasaToken')
+        }
+        fn symbol(self: @ContractState) -> felt252 {
+            ('LST')
+        }
+        fn decimals(self: @ContractState) -> u8 {
+            (18)
+        }
+        fn totalSupply(self: @ContractState) -> u256 {
+            self.totalSupply.read()
         }
     }
 }
