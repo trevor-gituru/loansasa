@@ -16,7 +16,8 @@ The `LoanSasaToken` contract in Cairo is designed to manage tokens on StarkNet. 
 - **Testing and Optimization**: This basic implementation serves as a demonstration. Production-ready contracts should be thoroughly tested, audited, and optimized to handle edge cases and ensure robustness.
 
 ## Tasks
-### 0. Rename Contract
+### Section A - Users
+#### 0. Rename Contract
 - Rename all instances of `HelloStarknet` to `LoanSasaToken` and test it out as follows:
  ```bash
 razaoul@razaoul-HP-ProBook-450-G4:~/loansasa/contracts/loan_sasa_token$: sed -i 's/HelloStarknet/LoanSasaToken/g' src/lib.cairo tests/test_contract.cairo
@@ -32,3 +33,5 @@ Running 2 test(s) from tests/
 [PASS] tests::test_contract::test_increase_balance (gas: ~170)
 Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
 ``` 
+#### 1. Add owner
+- Add the `owner` variable to hold the account address of administrator of smart contract
