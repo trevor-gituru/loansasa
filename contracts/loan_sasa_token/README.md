@@ -42,17 +42,22 @@ Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
 #### 3. Fetch owner
 - Create a view function `get_owner` that fetches and returns the owner of the contract
 
+#### 4. Account Balances
+- Create the `account_balances` storage var to store the LST held by user accounts
+- Create the `balanceOf` view function that returns the LST tokens held by the account address provided.
+
+
 ### Section B - Tokens
 #### 0. Create name of token
 - Create the `name` view function to return the name of the token, `LoanSasaToken`
 
-#### 1. Create symbel view fn
+#### 1. Create Symbol of toke
 - The `symbol` view function will return the symbol of the token, `LST`
 
 #### 2. Create totalSupply
 - Create `totalSupply` storage variable which will hold total amount of LST tokens in existance
 - Create `decimals` view function to return the number of decimals that represent 1 LST, which will be 18. This means that the smallest unit of **LST** is 1/10^18 of 1 LST.
-- Create `totalSupply` view function which returns total LST in existance
+- Create `totalSupply` view function which returns total LST in existance.
 
 ## Resources
 - [ERC 20](https://docs.openzeppelin.com/contracts/3.x/api/token/erc20#ERC20-name--)

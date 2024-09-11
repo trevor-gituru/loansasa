@@ -2,37 +2,38 @@ use starknet::ContractAddress;
 
 #[starknet::interface]
 pub trait ILoanSasaToken<TContractState> {
-    // Getters
+    // Callers
+    fn balanceOf(self: @TContractState, account: ContractAddress) -> u256;
+    fn decimals(self: @TContractState) -> u8;
     fn get_owner(self: @TContractState) -> ContractAddress;
     fn name(self: @TContractState) -> felt252;
     fn symbol(self: @TContractState) -> felt252;
-    fn decimals(self: @TContractState) -> u8;
     fn totalSupply(self: @TContractState) -> u256;
-    //Setters
-    fn increase_balance(ref self: TContractState, amount: felt252);
-    fn add_user(ref self: TContractState, username: felt252);
-    fn get_balance(self: @TContractState) -> felt252;
-    fn get_user(self: @TContractState) -> felt252;
+    // Invokers
     
 
 }
 
 #[starknet::contract]
 mod LoanSasaToken {
-    use super::ILoanSasaToken;
-use starknet::storage::{
-        StoragePointerReadAccess, StoragePointerWriteAccess, StoragePathEntry, Map
-    };
     use core::starknet::{ContractAddress, get_caller_address};
-
+    use starknet::storage::{
+        StoragePointerReadAccess, StoragePointerWriteAccess,
+        StoragePathEntry, Map
+    };
+    use super::ILoanSasaToken;
+    
+    const NAME: felt252 = 'LoanSasaToken';
+    const SYMBOL: felt252 = 'LST';
+    const DECIMALS: u8 = 18;
 
     #[storage]
     struct Storage {
-        balance: felt252,
-        users: Map<ContractAddress, felt252>,
-        totalSupply: u256,
-        owner: ContractAddress 
+        account_balances: Map<ContractAddress, u256>,
+        owner: ContractAddress,
+        totalSupply: u256
     }
+
 
     #[constructor]
     fn constructor(ref self: ContractState, owner_account: ContractAddress) {
@@ -41,36 +42,27 @@ use starknet::storage::{
 
     #[abi(embed_v0)]
     impl LoanSasaTokenImpl of super::ILoanSasaToken<ContractState> {
-        fn increase_balance(ref self: ContractState, amount: felt252) {
-            assert(amount != 0, 'Amount cannot be 0');
-            self.balance.write(self.balance.read() + amount);
+        // Callers
+        fn balanceOf(self: @ContractState, account: ContractAddress) -> u256 {
+            self.account_balances.entry(account).read()
         }
 
-        fn get_balance(self: @ContractState) -> felt252 {
-            self.balance.read()
-        }
-        
-        fn add_user(ref self: ContractState, username: felt252) {
-            let address = get_caller_address();
-            self.users.entry(address).write(username);
+        fn decimals(self: @ContractState) -> u8 {
+            (DECIMALS)
         }
 
-        fn get_user(self: @ContractState) -> felt252 {
-            self.users.entry(get_caller_address()).read()
-        }
-        // Getters
         fn get_owner(self: @ContractState) -> ContractAddress {
             (self.owner.read())
         }
+
         fn name(self: @ContractState) -> felt252 {
-            ('LoanSasaToken')
+            (NAME)
         }
+        
         fn symbol(self: @ContractState) -> felt252 {
-            ('LST')
+            (SYMBOL)
         }
-        fn decimals(self: @ContractState) -> u8 {
-            (18)
-        }
+
         fn totalSupply(self: @ContractState) -> u256 {
             self.totalSupply.read()
         }
