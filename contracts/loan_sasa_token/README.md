@@ -69,7 +69,7 @@ LST will be minted when free tokens fall below 25% of total supply and only owne
     + Updates the `totalSupply` and free tokens (**Account for the contract**)
     + Emits a `Mint` event on success
 
-#### 3. Transfer Tokens
+#### 4. Transfer Tokens
 LST will be able to transferred from the account holders to any receipient as long as they have sufficient funds
 - Create a `_sufficientBalance` internal fn that checks whether a given account can withdraw a certain number of LST
 - Create a `Transfer` event that contains (from, to, amount).
@@ -77,9 +77,16 @@ LST will be able to transferred from the account holders to any receipient as lo
     + Takes in `amount` to transfer
     + If account has `INSUFFICIENT BALANCE` a panic occurs
     + Else the amount is transfered to receipient's account.
+    + Emit the `Transfer` event on success.
 
-
-
+#### 5. Buy LST via ETH
+Users will be able to buy LST currrenly only via ETH at an exchange rate of 1 ETH: 1000 LST
+- Add `openzeppelin` dependecy to use the Disatchers to access ETH contract
+- Create a `buyTokens` state fn that:
+    + Takes in `amount` of ETH paid.
+    + Checks if they have approved the contract to transfer above funds from etherium else panics with  `ACCOUNT HASNT APPROVED ETH TRANSFER`
+    + Transfers the ETH tokens from client to contract account
+    + Transfer the equivalent `LST` from contract account to client
 
 ## Resources
 - [ERC 20](https://docs.openzeppelin.com/contracts/3.x/api/token/erc20#ERC20-name--)

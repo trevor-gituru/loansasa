@@ -15,6 +15,7 @@ pub trait ILoanSasaTokenView<TContractState> {
 // State changing public functions
 #[starknet::interface]
 pub trait ILoanSasaTokenState<TContractState> {
+    fn buyTokens(ref self: TContractState, amount: u256);
     fn mint(ref self: TContractState, amount: u256);
     fn transfer(ref self: TContractState, reciepient: ContractAddress, amount: u256);
 
@@ -23,17 +24,26 @@ pub trait ILoanSasaTokenState<TContractState> {
 
 #[starknet::contract]
 mod LoanSasaToken {
-    use core::starknet::{ContractAddress, get_caller_address,
-        get_contract_address};
+    use core::starknet::{
+        ContractAddress,
+        contract_address::contract_address_const,
+        get_caller_address, get_contract_address,
+        syscalls, SyscallResultTrait
+    };
+    use openzeppelin::token::erc20::interface::{IERC20, 
+        ERC20ABIDispatcher, ERC20ABIDispatcherTrait};
+    use openzeppelin::token::erc20::dual20::DualCaseERC20;
     use starknet::storage::{
         StoragePointerReadAccess, StoragePointerWriteAccess,
         StoragePathEntry, Map
     };
     use super::{ILoanSasaTokenState, ILoanSasaTokenView};
     
+
+    const DECIMALS: u8 = 18;
+    const ETH_LST_RATE: u256 = 1000;
     const NAME: felt252 = 'LoanSasaToken';
     const SYMBOL: felt252 = 'LST';
-    const DECIMALS: u8 = 18;
 
     #[storage]
     struct Storage {
@@ -76,6 +86,34 @@ mod LoanSasaToken {
 
     #[abi(embed_v0)]
     impl LoanSasaTokenStateImpl of super::ILoanSasaTokenState<ContractState> {
+        fn buyTokens(ref self: ContractState, amount: u256){
+            let buyer: ContractAddress = (get_caller_address());
+            let contract_account: ContractAddress = (get_contract_address());
+            let eth_address: ContractAddress = contract_address_const::<
+                0x49D36570D4E46F48E99674BD3FCC84644DDD6B96F7C741B1562B82F9E004DC7
+            >();
+            let eth_dispatcher = ERC20ABIDispatcher {
+                contract_address: eth_address
+            };
+
+            // Transfer the ETH to the caller
+            eth_dispatcher
+            .transfer_from(
+                buyer,
+                contract_account,
+                amount
+            );
+            let lst_bought: u256 = amount * ETH_LST_RATE;
+
+            let mut call_data: Array<felt252> = array![];
+            Serde::serialize(@buyer, ref call_data);
+            Serde::serialize(@lst_bought, ref call_data);
+
+            syscalls::call_contract_syscall(
+                contract_account, selector!("transfer"), call_data.span()
+            ).unwrap_syscall();
+        }
+        
         fn mint(ref self: ContractState, amount: u256){
             let account: ContractAddress = (get_caller_address());
             assert!(self._isOwner(account), "UNAUTHORIZED ACCOUNT");
@@ -91,6 +129,7 @@ mod LoanSasaToken {
 
         fn transfer(ref self: ContractState, reciepient: ContractAddress, amount: u256){
             let sender: ContractAddress = (get_caller_address());
+
             assert!(self._sufficientBalance(sender, amount), "INSUFFICIENT BALANCE");
             let new_balance: u256 = self.account_balances.entry(sender).read() - amount;
             self.account_balances.entry(sender).write(new_balance);
