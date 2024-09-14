@@ -1,3 +1,4 @@
+use core::starknet::ClassHash;
 use starknet::ContractAddress;
 
 // Viewer public functions
@@ -11,7 +12,8 @@ pub trait ILoanSasaTokenView<TContractState> {
     fn get_owner(self: @TContractState) -> ContractAddress;
     fn name(self: @TContractState) -> felt252;
     fn symbol(self: @TContractState) -> felt252;
-    fn totalSupply(self: @TContractState) -> u256;  
+    fn totalSupply(self: @TContractState) -> u256;
+
 }
 
 // State changing public functions
@@ -21,14 +23,19 @@ pub trait ILoanSasaTokenState<TContractState> {
     fn buyTokens(ref self: TContractState, amount: u256);
     fn mint(ref self: TContractState, amount: u256);
     fn transfer(ref self: TContractState, reciepient: ContractAddress, amount: u256);
+    fn transferFrom(ref self: TContractState, from: ContractAddress, amount: u256);
+    fn upgrade(ref self: TContractState, new_class_hash: ClassHash);
+
 
 }
 
 
 #[starknet::contract]
 mod LoanSasaToken {
+    use core::num::traits::Zero;
     use core::starknet::{
-        ContractAddress,
+        ContractAddress, ClassHash,
+        class_hash::class_hash_const,
         contract_address::contract_address_const,
         get_caller_address, get_contract_address,
         syscalls, SyscallResultTrait
@@ -160,6 +167,22 @@ mod LoanSasaToken {
                 from: sender, 
                 to: reciepient, amount});
         }
+
+        fn transferFrom(ref self: ContractState, from: ContractAddress, amount: u256){
+            let to: ContractAddress = (get_caller_address());
+            let approval_amount: u256 = self.allowance(from, to);
+            assert!(approval_amount >= amount, "INSUFFICIENT APPROVAL AMOUNT");
+            assert!(self._sufficientBalance(from, amount), "INSUFFICIENT BALANCE");
+
+            let new_balance: u256 = self.account_balances.entry(from).read() - amount;
+            self.account_balances.entry(from).write(new_balance);
+            let new_balance: u256 = self.account_balances.entry(to).read() + amount;
+            self.account_balances.entry(to).write(new_balance);
+            let new_balance: u256 = approval_amount - amount;
+            self.approvals.entry(from).entry(to).write(new_balance);
+            self.emit(Transfer{from, to, amount});
+        }
+
         
 
     }

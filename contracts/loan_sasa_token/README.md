@@ -89,7 +89,7 @@ Users will be able to buy LST currrenly only via ETH at an exchange rate of 1 ET
     + Transfer the equivalent `LST` from contract account to client
 
 #### 6. Add p2p money transfer
-This is where one of the LST holder **A** approves **B** to be able to withdraw certain amount of LST at any given time
+This is where one of the LST holder **A** approves **B** to be able to withdraw certain amount of LST at any given time. It assumes the borrower and lender have already created their own loan agreement & loan repayement is not settled on blockchain
 
 ##### I. Approval
 - Add the `approval` storage var in form of `Map<lender, Map<borrower, amount>>`
@@ -105,6 +105,12 @@ This is where one of the LST holder **A** approves **B** to be able to withdraw 
     + Takes in the `lender`, `borrower` parameters
     + Returns the `amount` approved
      
+##### III. TransferFrom
+- Create the `transferFrom` state fn that:
+    + Takes in `from`, `amount`.
+    + Asserts that the `amount` has been approved & sufficient sender balance.
+    + Carry out respective LST transfer
+    + Emit `Transfer` event 
 
 ## Resources
 - [ERC 20](https://docs.openzeppelin.com/contracts/3.x/api/token/erc20#ERC20-name--)
