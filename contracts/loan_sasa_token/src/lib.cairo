@@ -15,6 +15,7 @@ pub trait ILoanSasaTokenView<TContractState> {
 // State changing public functions
 #[starknet::interface]
 pub trait ILoanSasaTokenState<TContractState> {
+    fn approve(ref self: TContractState, borrower: ContractAddress, amount: u256);
     fn buyTokens(ref self: TContractState, amount: u256);
     fn mint(ref self: TContractState, amount: u256);
     fn transfer(ref self: TContractState, reciepient: ContractAddress, amount: u256);
@@ -48,8 +49,9 @@ mod LoanSasaToken {
     #[storage]
     struct Storage {
         account_balances: Map<ContractAddress, u256>,
+        approvals: Map<ContractAddress, Map<ContractAddress, u256>>,
         owner: ContractAddress,
-        totalSupply: u256
+        total_supply: u256
     }
 
     #[constructor]
@@ -60,11 +62,20 @@ mod LoanSasaToken {
     #[event]
     #[derive(Drop, starknet::Event)]
     enum Event {
+        Approval: Approval,
         Mint: Mint,
         Transfer: Transfer,
 
     }
 
+    #[derive(Drop, starknet::Event)]
+    struct Approval {
+        #[key]
+        lender: ContractAddress,
+        #[key]
+        borrower: ContractAddress,
+        amount: u256
+    }
     /// @dev Represents a mint action successfuly performed
     #[derive(Drop, starknet::Event)]
     struct Mint {
@@ -86,6 +97,14 @@ mod LoanSasaToken {
 
     #[abi(embed_v0)]
     impl LoanSasaTokenStateImpl of super::ILoanSasaTokenState<ContractState> {
+        fn approve(ref self: ContractState, borrower: ContractAddress, amount: u256){
+            let lender: ContractAddress = (get_caller_address());
+            assert!(self.balanceOf(lender) >= amount, "LENDER HAS INSUFFICIENT BALANCE");
+            self.approvals.entry(lender).entry(borrower).write(amount);
+            self.emit(Approval{lender, borrower, amount});
+
+        }
+
         fn buyTokens(ref self: ContractState, amount: u256){
             let buyer: ContractAddress = (get_caller_address());
             let contract_account: ContractAddress = (get_contract_address());
@@ -120,10 +139,10 @@ mod LoanSasaToken {
             assert!(self.canMint(), "FREE TOKENS ARE ABOVE THRESHOLD");
             
             let contract_account: ContractAddress = (get_contract_address());
-            let prev_free_token: u256 = self.account_balances.entry(contract_account).read();
-            let prev_supply: u256 = self.totalSupply.read(); 
-            self.totalSupply.write(prev_supply + amount);
-            self.account_balances.entry(contract_account).write(prev_free_token + amount);
+            let new_free_token: u256 = self.account_balances.entry(contract_account).read() + amount;
+            let new_supply: u256 = self.total_supply.read() + amount; 
+            self.total_supply.write(new_supply);
+            self.account_balances.entry(contract_account).write(new_free_token);
             self.emit(Mint{account, amount});
         }
 
@@ -150,13 +169,10 @@ mod LoanSasaToken {
         }
 
         fn canMint(self: @ContractState) -> bool {
-            let threshold: u256 = self.totalSupply.read() / 4;
+            let threshold: u256 = self.total_supply.read() / 4;
             let contract_address: ContractAddress = get_contract_address();
             let free_tokens: u256 = self.account_balances.entry(contract_address).read();
-            if free_tokens > threshold{
-                return false;
-            }
-            return true;
+            (free_tokens < threshold)
         }
 
         fn decimals(self: @ContractState) -> u8 {
@@ -176,7 +192,7 @@ mod LoanSasaToken {
         }
 
         fn totalSupply(self: @ContractState) -> u256 {
-            self.totalSupply.read()
+            self.total_supply.read()
         }
     }
 
@@ -184,20 +200,13 @@ mod LoanSasaToken {
     impl InternalUserFunctions of InternalUserFunctionsTraits{
         fn _isOwner(self: @ContractState, account: ContractAddress) -> bool{
             let owner: ContractAddress = self.owner.read();
-            if owner == account {
-                return true;
-            }
-            return false;
+            (owner == account)
         }
         fn _sufficientBalance(self: @ContractState, account: ContractAddress,
             transfer_amount: u256
         ) -> bool{
             let balance: u256 = self.balanceOf(account);
-            if transfer_amount > balance{
-                return false;
-            }else{
-                return true;
-            }
+            (transfer_amount < balance)
         }
 
     }
