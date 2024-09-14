@@ -112,6 +112,12 @@ This is where one of the LST holder **A** approves **B** to be able to withdraw 
     + Carry out respective LST transfer
     + Emit `Transfer` event 
 
+### Section C - Contract
+#### 0. Upgradability
+- Create `Upgrade` event that has the caller of upgrade
+- Create an `upgrade` state fn that:
+    + Takes in new declared classHash & replaces the old one
+    + Emit `Upgrade` event on success
 ## Resources
 - [ERC 20](https://docs.openzeppelin.com/contracts/3.x/api/token/erc20#ERC20-name--)
 

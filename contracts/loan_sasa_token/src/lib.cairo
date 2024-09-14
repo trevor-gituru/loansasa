@@ -1,6 +1,18 @@
 use core::starknet::ClassHash;
 use starknet::ContractAddress;
 
+// State changing public functions
+#[starknet::interface]
+pub trait ILoanSasaTokenState<TContractState> {
+    fn approve(ref self: TContractState, borrower: ContractAddress, amount: u256);
+    fn buyTokens(ref self: TContractState, amount: u256);
+    fn mint(ref self: TContractState, amount: u256);
+    fn transfer(ref self: TContractState, reciepient: ContractAddress, amount: u256);
+    fn transferFrom(ref self: TContractState, from: ContractAddress, amount: u256);
+    fn upgrade(ref self: TContractState, new_class_hash: ClassHash);
+
+
+}
 // Viewer public functions
 #[starknet::interface]
 pub trait ILoanSasaTokenView<TContractState> {
@@ -16,23 +28,11 @@ pub trait ILoanSasaTokenView<TContractState> {
 
 }
 
-// State changing public functions
-#[starknet::interface]
-pub trait ILoanSasaTokenState<TContractState> {
-    fn approve(ref self: TContractState, borrower: ContractAddress, amount: u256);
-    fn buyTokens(ref self: TContractState, amount: u256);
-    fn mint(ref self: TContractState, amount: u256);
-    fn transfer(ref self: TContractState, reciepient: ContractAddress, amount: u256);
-    fn transferFrom(ref self: TContractState, from: ContractAddress, amount: u256);
-    fn upgrade(ref self: TContractState, new_class_hash: ClassHash);
-
-
-}
-
 
 #[starknet::contract]
 mod LoanSasaToken {
-    use core::num::traits::Zero;
+    use starknet::event::EventEmitter;
+use core::num::traits::Zero;
     use core::starknet::{
         ContractAddress, ClassHash,
         class_hash::class_hash_const,
@@ -74,6 +74,7 @@ mod LoanSasaToken {
         Approval: Approval,
         Mint: Mint,
         Transfer: Transfer,
+        Upgrade: Upgrade,
 
     }
 
@@ -102,7 +103,12 @@ mod LoanSasaToken {
         to: ContractAddress,
         amount: u256
     }
-    
+
+    /// @dev Represents a transfer action successfuly performed
+    #[derive(Drop, starknet::Event)]
+    struct Upgrade {
+        by: ContractAddress,
+    }
 
     #[abi(embed_v0)]
     impl LoanSasaTokenStateImpl of super::ILoanSasaTokenState<ContractState> {
@@ -171,7 +177,7 @@ mod LoanSasaToken {
         fn transferFrom(ref self: ContractState, from: ContractAddress, amount: u256){
             let to: ContractAddress = (get_caller_address());
             let approval_amount: u256 = self.allowance(from, to);
-            assert!(approval_amount >= amount, "INSUFFICIENT APPROVAL AMOUNT");
+            assert!(amount <= approval_amount, "INSUFFICIENT APPROVAL AMOUNT");
             assert!(self._sufficientBalance(from, amount), "INSUFFICIENT BALANCE");
 
             let new_balance: u256 = self.account_balances.entry(from).read() - amount;
@@ -183,7 +189,13 @@ mod LoanSasaToken {
             self.emit(Transfer{from, to, amount});
         }
 
-        
+        fn upgrade(ref self: ContractState, new_class_hash: ClassHash) {
+            let caller: ContractAddress = get_caller_address();
+            assert!(self._isOwner(caller), "INSUFFICIENT AUTHORITY");
+            assert!(!(new_class_hash.is_zero()), "Class hash cannot be zero");
+            syscalls::replace_class_syscall(new_class_hash).unwrap();
+            self.emit(Upgrade{by: caller});
+        }
 
     }
 
@@ -201,7 +213,7 @@ mod LoanSasaToken {
             let threshold: u256 = self.total_supply.read() / 4;
             let contract_address: ContractAddress = get_contract_address();
             let free_tokens: u256 = self.account_balances.entry(contract_address).read();
-            (free_tokens < threshold)
+            (free_tokens <= threshold)
         }
 
         fn decimals(self: @ContractState) -> u8 {
