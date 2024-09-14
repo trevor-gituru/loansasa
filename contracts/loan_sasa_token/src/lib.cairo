@@ -3,6 +3,8 @@ use starknet::ContractAddress;
 // Viewer public functions
 #[starknet::interface]
 pub trait ILoanSasaTokenView<TContractState> {
+    fn allowance(self: @TContractState, lender: ContractAddress,
+        borrower: ContractAddress) -> u256;
     fn balanceOf(self: @TContractState, account: ContractAddress) -> u256;
     fn canMint(self: @TContractState) -> bool;
     fn decimals(self: @TContractState) -> u8;
@@ -164,6 +166,10 @@ mod LoanSasaToken {
 
     #[abi(embed_v0)]
     impl LoanSasaTokenViewImpl of super::ILoanSasaTokenView<ContractState> {
+        fn allowance(self: @ContractState, lender: ContractAddress,
+                borrower: ContractAddress) -> u256{
+            self.approvals.entry(lender).entry(borrower).read()
+        }
         fn balanceOf(self: @ContractState, account: ContractAddress) -> u256 {
             self.account_balances.entry(account).read()
         }

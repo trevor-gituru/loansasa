@@ -100,6 +100,11 @@ This is where one of the LST holder **A** approves **B** to be able to withdraw 
     + Adds the details to the `approval` storage var
     + Emits the `approval` event
 
+##### II. Allowance
+- Add the `allowance`view fn that:
+    + Takes in the `lender`, `borrower` parameters
+    + Returns the `amount` approved
+     
 
 ## Resources
 - [ERC 20](https://docs.openzeppelin.com/contracts/3.x/api/token/erc20#ERC20-name--)
