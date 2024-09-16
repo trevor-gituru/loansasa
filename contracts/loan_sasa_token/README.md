@@ -144,7 +144,7 @@ The smart contract should create a mechanism that enables auto loan repayement, 
 - Create a `_insertLoan` internal fn that:
     + Accpets a `Loan` 
     + Loops through the vec to find an empty slot and if not appends the loan to a new slot
-    + Returns the slot idB)
+    + Returns the slot id
 - Create a `createLoanPledge` state fn that:
     + Takes in `amount` and `period` (seconds) to pledge
     + Asserts that lender has sufficient balance & that period not exceed 1 year
