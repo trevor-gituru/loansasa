@@ -112,6 +112,44 @@ This is where one of the LST holder **A** approves **B** to be able to withdraw 
     + Carry out respective LST transfer
     + Emit `Transfer` event 
 
+#### 7. Add loan repayement
+The smart contract should create a mechanism that enables auto loan repayement, it will be as follows:
+- The Lender will pledge a certain amount of LST that will be held by smart contract for loans and will specify max period of loan
+- Any prospective borrower will query with blockchain available loan contracts they can take based on specified amount and period
+- The can then sign the loan contract where they are expected to give a 115% collateral based on loan, after which loan is automatically transferred to their account
+- The borrower can then pay only the full amount of loan before expected time
+- The lender has the option of checking status of loan, if borrower still hasnt paid they have the option of withdrawing the collateral of offered by the borrower.
+- Smart contract charges 3% handler fee & loan rate is principal plus 0.3% monthly interest
+
+##### I. Lender pledge
+- Create a `pledges` storage var to store overall pledges of lenders
+- Create a `_transferPledges` internal fn to handle transfer of tokens betweens lenders & pledges
+- Create a `loans_counter` that counts number of loan contracts created and initialized to 0 on creation smart contract
+- Create a `Loan` structure that holds:
+    + `id`: From `loans_counter`
+    + `lender` address
+    + `borrower` address
+    + `amount` borrowed
+    + `signed_on` - time `borrower` accepted loan
+    + `period` - Expected loan repayment period
+    + `status` of loan
+- Create a `LoanStatus` enum that describes status of loan as follows:
+    + `Pending`,       // Loan has been offered but not yet accepted
+    + `Active`,        // Loan is active and has been accepted by the borrower
+    + `Repaid`,        // Loan has been fully repaid
+    + `Defaulted`,     // Loan has defaulted and collateral has been claimed
+    + `Closed`,        // Loan has been closed or terminated
+- Create a `LoanEvent` that emits the loan structure, the only difference being that it has a `local_id` which is Loans id in storage array
+- Create a `loans` storage vec to hold loan contracts
+- Create a `_insertLoan` internal fn that:
+    + Accpets a `Loan` 
+    + Loops through the vec to find an empty slot and if not appends the loan to a new slot
+    + Returns the slot idB)
+- Create a `createLoanPledge` state fn that:
+    + Takes in `amount` and `period` (seconds) to pledge
+    + Asserts that lender has sufficient balance & that period not exceed 1 year
+    + Transfer the LST to `pledges`
+    + Emit a 
 ### Section C - Contract
 #### 0. Upgradability
 - Create `Upgrade` event that has the caller of upgrade

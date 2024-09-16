@@ -6,6 +6,8 @@ use starknet::ContractAddress;
 pub trait ILoanSasaTokenState<TContractState> {
     fn approve(ref self: TContractState, borrower: ContractAddress, amount: u256);
     fn buyTokens(ref self: TContractState, amount: u256);
+    fn createPledge(ref self: TContractState, 
+        amount: u256, period: u64);
     fn mint(ref self: TContractState, amount: u256);
     fn transfer(ref self: TContractState, reciepient: ContractAddress, amount: u256);
     fn transferFrom(ref self: TContractState, from: ContractAddress, amount: u256);
@@ -25,53 +27,64 @@ pub trait ILoanSasaTokenView<TContractState> {
     fn name(self: @TContractState) -> felt252;
     fn symbol(self: @TContractState) -> felt252;
     fn totalSupply(self: @TContractState) -> u256;
-
 }
 
 
 #[starknet::contract]
 mod LoanSasaToken {
     use starknet::event::EventEmitter;
-use core::num::traits::Zero;
+    use core::num::traits::Zero;
     use core::starknet::{
         ContractAddress, ClassHash,
         class_hash::class_hash_const,
         contract_address::contract_address_const,
+        get_block_timestamp,
         get_caller_address, get_contract_address,
-        syscalls, SyscallResultTrait
+        syscalls, SyscallResultTrait,
     };
     use openzeppelin::token::erc20::interface::{IERC20, 
         ERC20ABIDispatcher, ERC20ABIDispatcherTrait};
     use openzeppelin::token::erc20::dual20::DualCaseERC20;
     use starknet::storage::{
         StoragePointerReadAccess, StoragePointerWriteAccess,
-        StoragePathEntry, Map
+        StoragePathEntry, Map,
+        Vec, VecTrait, MutableVecTrait
     };
     use super::{ILoanSasaTokenState, ILoanSasaTokenView};
     
 
+
     const DECIMALS: u8 = 18;
-    const ETH_LST_RATE: u256 = 1000;
+    const ETH_LST_RATE: u256 = 1_000;
+    const MAX_PERIOD: u64 = 31_579_200; // Avergae time of a year
     const NAME: felt252 = 'LoanSasaToken';
     const SYMBOL: felt252 = 'LST';
+
+
+
 
     #[storage]
     struct Storage {
         account_balances: Map<ContractAddress, u256>,
         approvals: Map<ContractAddress, Map<ContractAddress, u256>>,
+        loans_counter: u64,
+        loans: Vec<Option<Loan>>,
         owner: ContractAddress,
+        pledges: u256,
         total_supply: u256
     }
 
     #[constructor]
     fn constructor(ref self: ContractState, owner_account: ContractAddress) {
         self.owner.write(owner_account);
+        self.loans_counter.write(0_u64);
     }
-
+//// Events
     #[event]
     #[derive(Drop, starknet::Event)]
     enum Event {
         Approval: Approval,
+        Loans: LoanEvent,
         Mint: Mint,
         Transfer: Transfer,
         Upgrade: Upgrade,
@@ -85,6 +98,18 @@ use core::num::traits::Zero;
         #[key]
         borrower: ContractAddress,
         amount: u256
+    }
+    
+    #[derive(Drop, starknet::Event)]
+    struct LoanEvent {
+        global_id: u64,
+        local_id: u64,
+        lender: ContractAddress,
+        borrower: Option<ContractAddress>,
+        amount: u256,
+        period: u64,
+        signed_on: Option<ContractAddress>,
+        status: LoanStatus
     }
     /// @dev Represents a mint action successfuly performed
     #[derive(Drop, starknet::Event)]
@@ -109,7 +134,26 @@ use core::num::traits::Zero;
     struct Upgrade {
         by: ContractAddress,
     }
+//// Data Types
 
+    #[derive(Drop, Serde, starknet::Store)]
+    pub struct Loan {
+        id: u64,
+        lender: ContractAddress,
+        borrower: Option<ContractAddress>,
+        amount: u256,
+        period: u64,
+        signed_on: Option<ContractAddress>,
+        status: LoanStatus
+    }
+    #[derive(Copy, Drop, Serde, starknet::Store)]
+    pub enum LoanStatus {
+        Pending,       // Loan has been offered but not yet accepted
+        Active,        // Loan is active and has been accepted by the borrower
+        Repaid,        // Loan has been fully repaid
+        Defaulted,     // Loan has defaulted and collateral has been claimed
+        Closed,        // Loan has been closed or terminated
+    }
     #[abi(embed_v0)]
     impl LoanSasaTokenStateImpl of super::ILoanSasaTokenState<ContractState> {
         fn approve(ref self: ContractState, borrower: ContractAddress, amount: u256){
@@ -148,6 +192,24 @@ use core::num::traits::Zero;
             ).unwrap_syscall();
         }
         
+        fn createPledge(ref self: ContractState,
+                amount: u256, period: u64){
+            let lender: ContractAddress = (get_caller_address());
+            assert!(self._sufficientBalance(lender, amount), "INSUFFICIENT BALANCE");
+            assert!(period <= MAX_PERIOD, "PERIOD EXCEEDED A YEAR");
+            self._transferPledges(lender, amount);
+            let loan_id: u64 = self.loans_counter.read();
+            let loan: Loan = Loan {
+                id: loan_id,
+                lender,
+                borrower: Option::None,
+                amount,
+                signed_on: Option::None,
+                period,
+                status: LoanStatus::Pending
+            };
+        }
+
         fn mint(ref self: ContractState, amount: u256){
             let account: ContractAddress = (get_caller_address());
             assert!(self._isOwner(account), "UNAUTHORIZED ACCOUNT");
@@ -235,10 +297,11 @@ use core::num::traits::Zero;
         fn totalSupply(self: @ContractState) -> u256 {
             self.total_supply.read()
         }
+
     }
 
     #[generate_trait]
-    impl InternalUserFunctions of InternalUserFunctionsTraits{
+    impl InternalViewFunctions of InternalViewFunctionsTraits{
         fn _isOwner(self: @ContractState, account: ContractAddress) -> bool{
             let owner: ContractAddress = self.owner.read();
             (owner == account)
@@ -251,5 +314,26 @@ use core::num::traits::Zero;
         }
 
     }
-    
+    #[generate_trait]
+    impl InternalStateFunctions of InternalStateFunctionsTraits{
+        fn _transferPledges(ref self: ContractState, account: ContractAddress, amount: u256){
+            let new_balance = self.account_balances.entry(account).read() - amount;
+            self.account_balances.entry(account).write(new_balance);
+            let new_balance = self.pledges.read() + amount;
+            self.pledges.write(new_balance);
+        }
+
+        fn _insertLoan(ref self: ContractState, loan: Loan) -> u64{
+            if self.loans.len() == 0{
+                self.loans.append().write(Option::Some(loan));
+                return 0_64;
+            } else {
+                let added: bool = false;
+                for i in 0..self.loans.len() {
+                    let current_loan: Option<Loan> = self.loans.at(i).read();
+                };
+                return 0_64;
+            }
+        }
+    }
 }
