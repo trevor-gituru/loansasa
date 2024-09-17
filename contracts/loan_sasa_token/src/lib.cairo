@@ -109,7 +109,30 @@ mod LoanSasaToken {
         amount: u256,
         period: u64,
         signed_on: Option<ContractAddress>,
-        status: LoanStatus
+        status: u8
+    }
+
+    #[generate_trait]
+    impl LoanEventImpl of LoanEventTrait {
+        fn new(loan: Loan, local_id: u64) -> LoanEvent{
+            let status_code = match loan.status {
+                LoanStatus::Pending => { 0_u8 },
+                LoanStatus::Active => { 1_u8 },
+                LoanStatus::Repaid => { 2_u8},
+                LoanStatus::Defaulted => { 3_u8 },
+                LoanStatus::Closed => { 4_u8 },
+            };
+            LoanEvent {
+                global_id: loan.id,
+                local_id: local_id,
+                lender: loan.lender,
+                borrower: Option::None,
+                amount: loan.amount,
+                period: loan.period,
+                signed_on: Option::None,
+                status: status_code
+            }
+        }
     }
     /// @dev Represents a mint action successfuly performed
     #[derive(Drop, starknet::Event)]
@@ -136,7 +159,7 @@ mod LoanSasaToken {
     }
 //// Data Types
 
-    #[derive(Drop, Serde, starknet::Store)]
+    #[derive(Copy, Drop, Serde, starknet::Store)]
     pub struct Loan {
         id: u64,
         lender: ContractAddress,
@@ -208,6 +231,9 @@ mod LoanSasaToken {
                 period,
                 status: LoanStatus::Pending
             };
+            let local_id: u64 = self._insertLoan(loan);
+            let loan_event: LoanEvent = LoanEventImpl::new(loan, local_id);
+            self.emit(loan_event);
         }
 
         fn mint(ref self: ContractState, amount: u256){
@@ -323,17 +349,32 @@ mod LoanSasaToken {
             self.pledges.write(new_balance);
         }
 
-        fn _insertLoan(ref self: ContractState, loan: Loan) -> u64{
+        fn _insertLoan(ref self: ContractState, new_loan: Loan) -> u64{
+            // Check for an empty vec
+            let next_global_id: u64 = self.loans_counter.read() + 1_u64;
             if self.loans.len() == 0{
-                self.loans.append().write(Option::Some(loan));
-                return 0_64;
-            } else {
-                let added: bool = false;
-                for i in 0..self.loans.len() {
-                    let current_loan: Option<Loan> = self.loans.at(i).read();
-                };
-                return 0_64;
+                self.loans.append().write(Option::Some(new_loan));
+                self.loans_counter.write(next_global_id);
+                return 0_u64;
             }
+            // Check for vec with empty slot
+            let mut i: u64 = 0;
+            let mut found_slot: bool = false;
+            while i < self.loans.len(){
+                let current_loan: Option<Loan> = self.loans.at(i).read();
+                if current_loan.is_none(){
+                    self.loans.at(i).write(Option::Some(new_loan));
+                    found_slot = true;
+                    break;
+                }
+                i = i + 1;
+            };
+            self.loans_counter.write(next_global_id);
+            if found_slot{
+                return i;
+            }
+            self.loans.append().write(Option::Some(new_loan));
+            return (self.loans.len() - 1_u64);
         }
     }
 }

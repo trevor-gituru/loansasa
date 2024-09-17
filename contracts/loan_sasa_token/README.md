@@ -149,7 +149,7 @@ The smart contract should create a mechanism that enables auto loan repayement, 
     + Takes in `amount` and `period` (seconds) to pledge
     + Asserts that lender has sufficient balance & that period not exceed 1 year
     + Transfer the LST to `pledges`
-    + Emit a 
+    + Emit a LoanEvent on completion
 ### Section C - Contract
 #### 0. Upgradability
 - Create `Upgrade` event that has the caller of upgrade
