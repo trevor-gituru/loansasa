@@ -1,38 +1,11 @@
-use core::starknet::ClassHash;
-use starknet::ContractAddress;
-
-// State changing public functions
-#[starknet::interface]
-pub trait ILoanSasaTokenState<TContractState> {
-    fn approve(ref self: TContractState, borrower: ContractAddress, amount: u256);
-    fn buyTokens(ref self: TContractState, amount: u256);
-    fn createPledge(ref self: TContractState, 
-        amount: u256, period: u64);
-    fn mint(ref self: TContractState, amount: u256);
-    fn transfer(ref self: TContractState, reciepient: ContractAddress, amount: u256);
-    fn transferFrom(ref self: TContractState, from: ContractAddress, amount: u256);
-    fn upgrade(ref self: TContractState, new_class_hash: ClassHash);
-
-
-}
-// Viewer public functions
-#[starknet::interface]
-pub trait ILoanSasaTokenView<TContractState> {
-    fn allowance(self: @TContractState, lender: ContractAddress,
-        borrower: ContractAddress) -> u256;
-    fn balanceOf(self: @TContractState, account: ContractAddress) -> u256;
-    fn canMint(self: @TContractState) -> bool;
-    fn decimals(self: @TContractState) -> u8;
-    fn get_owner(self: @TContractState) -> ContractAddress;
-    fn name(self: @TContractState) -> felt252;
-    fn symbol(self: @TContractState) -> felt252;
-    fn totalSupply(self: @TContractState) -> u256;
-}
-
+mod interfaces;
 
 #[starknet::contract]
 mod LoanSasaToken {
-    use starknet::event::EventEmitter;
+// -------------------------
+//       Import Section
+// -------------------------
+// Import the data types, traits & fn needed for smart contract.
     use core::num::traits::Zero;
     use core::starknet::{
         ContractAddress, ClassHash,
@@ -45,41 +18,51 @@ mod LoanSasaToken {
     use openzeppelin::token::erc20::interface::{IERC20, 
         ERC20ABIDispatcher, ERC20ABIDispatcherTrait};
     use openzeppelin::token::erc20::dual20::DualCaseERC20;
+    use starknet::event::EventEmitter;
     use starknet::storage::{
         StoragePointerReadAccess, StoragePointerWriteAccess,
         StoragePathEntry, Map,
         Vec, VecTrait, MutableVecTrait
     };
-    use super::{ILoanSasaTokenState, ILoanSasaTokenView};
-    
+    use super::interfaces::{ILoanSasaTokenState, ILoanSasaTokenView};
 
-
+// -------------------------
+//       Constants Section
+// -------------------------
+// Define constant variables that are used throughout the contract.
     const DECIMALS: u8 = 18;
     const ETH_LST_RATE: u256 = 1_000;
     const MAX_PERIOD: u64 = 31_579_200; // Avergae time of a year
     const NAME: felt252 = 'LoanSasaToken';
     const SYMBOL: felt252 = 'LST';
 
-
-
-
-    #[storage]
-    struct Storage {
-        account_balances: Map<ContractAddress, u256>,
-        approvals: Map<ContractAddress, Map<ContractAddress, u256>>,
-        loans_counter: u64,
-        loans: Vec<Option<Loan>>,
-        owner: ContractAddress,
-        pledges: u256,
-        total_supply: u256
+// -------------------------
+//       Data Types Section
+// -------------------------
+// Define custom data types used by the contract.
+    #[derive(Copy, Drop, Serde, starknet::Store)]
+    pub struct Loan {
+        id: u64,
+        lender: ContractAddress,
+        borrower: Option<ContractAddress>,
+        amount: u256,
+        period: u64,
+        signed_on: Option<ContractAddress>,
+        status: LoanStatus
     }
 
-    #[constructor]
-    fn constructor(ref self: ContractState, owner_account: ContractAddress) {
-        self.owner.write(owner_account);
-        self.loans_counter.write(0_u64);
+    #[derive(Copy, Drop, Serde, starknet::Store)]
+    pub enum LoanStatus {
+        Pending,       // Loan has been offered but not yet accepted
+        Active,        // Loan is active and has been accepted by the borrower
+        Repaid,        // Loan has been fully repaid
+        Defaulted,     // Loan has defaulted and collateral has been claimed
+        Closed,        // Loan has been closed or terminated
     }
-//// Events
+// -------------------------
+//       Events Section
+// -------------------------
+// Define events that will be emitted during contract execution.
     #[event]
     #[derive(Drop, starknet::Event)]
     enum Event {
@@ -111,7 +94,6 @@ mod LoanSasaToken {
         signed_on: Option<ContractAddress>,
         status: u8
     }
-
     #[generate_trait]
     impl LoanEventImpl of LoanEventTrait {
         fn new(loan: Loan, local_id: u64) -> LoanEvent{
@@ -134,6 +116,7 @@ mod LoanSasaToken {
             }
         }
     }
+
     /// @dev Represents a mint action successfuly performed
     #[derive(Drop, starknet::Event)]
     struct Mint {
@@ -157,28 +140,36 @@ mod LoanSasaToken {
     struct Upgrade {
         by: ContractAddress,
     }
-//// Data Types
-
-    #[derive(Copy, Drop, Serde, starknet::Store)]
-    pub struct Loan {
-        id: u64,
-        lender: ContractAddress,
-        borrower: Option<ContractAddress>,
-        amount: u256,
-        period: u64,
-        signed_on: Option<ContractAddress>,
-        status: LoanStatus
+// -------------------------
+//       Storage Section
+// -------------------------
+// Define the storage variables here, which will be persistent across contract calls.
+    #[storage]
+    struct Storage {
+        account_balances: Map<ContractAddress, u256>,
+        approvals: Map<ContractAddress, Map<ContractAddress, u256>>,
+        loans_counter: u64,
+        loans: Vec<Option<Loan>>,
+        owner: ContractAddress,
+        pledges: u256,
+        total_supply: u256
     }
-    #[derive(Copy, Drop, Serde, starknet::Store)]
-    pub enum LoanStatus {
-        Pending,       // Loan has been offered but not yet accepted
-        Active,        // Loan is active and has been accepted by the borrower
-        Repaid,        // Loan has been fully repaid
-        Defaulted,     // Loan has defaulted and collateral has been claimed
-        Closed,        // Loan has been closed or terminated
+// -------------------------
+//       Constructor Section
+// -------------------------
+// Constructor to initialize contract state (owner and initial balance).
+    #[constructor]
+    fn constructor(ref self: ContractState, owner_account: ContractAddress) {
+        self.owner.write(owner_account);
+        self.loans_counter.write(0_u64);
     }
+// -------------------------
+//       Implementation Section
+// -------------------------
+// Implement the contract functions and logic.
+     
     #[abi(embed_v0)]
-    impl LoanSasaTokenStateImpl of super::ILoanSasaTokenState<ContractState> {
+    impl LoanSasaTokenStateImpl of ILoanSasaTokenState<ContractState> {
         fn approve(ref self: ContractState, borrower: ContractAddress, amount: u256){
             let lender: ContractAddress = (get_caller_address());
             assert!(self.balanceOf(lender) >= amount, "LENDER HAS INSUFFICIENT BALANCE");
@@ -288,7 +279,7 @@ mod LoanSasaToken {
     }
 
     #[abi(embed_v0)]
-    impl LoanSasaTokenViewImpl of super::ILoanSasaTokenView<ContractState> {
+    impl LoanSasaTokenViewImpl of ILoanSasaTokenView<ContractState> {
         fn allowance(self: @ContractState, lender: ContractAddress,
                 borrower: ContractAddress) -> u256{
             self.approvals.entry(lender).entry(borrower).read()

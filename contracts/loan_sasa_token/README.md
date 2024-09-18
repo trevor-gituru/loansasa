@@ -121,7 +121,7 @@ The smart contract should create a mechanism that enables auto loan repayement, 
 - The lender has the option of checking status of loan, if borrower still hasnt paid they have the option of withdrawing the collateral of offered by the borrower.
 - Smart contract charges 3% handler fee & loan rate is principal plus 0.3% monthly interest
 
-##### I. Lender pledge
+##### I. Lender pledge creation
 - Create a `pledges` storage var to store overall pledges of lenders
 - Create a `_transferPledges` internal fn to handle transfer of tokens betweens lenders & pledges
 - Create a `loans_counter` that counts number of loan contracts created and initialized to 0 on creation smart contract
@@ -150,6 +150,13 @@ The smart contract should create a mechanism that enables auto loan repayement, 
     + Asserts that lender has sufficient balance & that period not exceed 1 year
     + Transfer the LST to `pledges`
     + Emit a LoanEvent on completion
+##### II. Loan querying
+- Create a `fetchLoan` view fn that:
+    + Takes `local_id` of loan
+    + Provides Loan located in `loans` vec at `local_id`
+- Create a `filterLoans` view fn that:
+    + Takes `amount` & `period`
+    + Returns an array of loan id that meet above criterias
 ### Section C - Contract
 #### 0. Upgradability
 - Create `Upgrade` event that has the caller of upgrade
@@ -158,7 +165,3 @@ The smart contract should create a mechanism that enables auto loan repayement, 
     + Emit `Upgrade` event on success
 ## Resources
 - [ERC 20](https://docs.openzeppelin.com/contracts/3.x/api/token/erc20#ERC20-name--)
-
-How will i approve loans:
-- Blockchain, just like buyingTokens p2p, add approve & transferFrom
-approve:
