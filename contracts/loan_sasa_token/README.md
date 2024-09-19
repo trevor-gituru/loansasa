@@ -114,10 +114,10 @@ This is where one of the LST holder **A** approves **B** to be able to withdraw 
 
 #### 7. Add loan repayement
 The smart contract should create a mechanism that enables auto loan repayement, it will be as follows:
-- The Lender will pledge a certain amount of LST that will be held by smart contract for loans and will specify max period of loan
-- Any prospective borrower will query with blockchain available loan contracts they can take based on specified amount and period
-- The can then sign the loan contract where they are expected to give a 115% collateral based on loan, after which loan is automatically transferred to their account
-- The borrower can then pay only the full amount of loan before expected time
+- The Lender will **pledge** a certain amount of LST that will be held by smart contract for loans and will specify max period of loan
+- Any prospective borrower will **query** with blockchain available loan contracts they can take based on specified amount and period
+- The can then **sign** the loan contract where they are expected to give a 115% collateral based on loan, after which loan is automatically transferred to their account
+- The borrower can then **pay** only the full amount of loan before expected time
 - The lender has the option of checking status of loan, if borrower still hasnt paid they have the option of withdrawing the collateral of offered by the borrower.
 - Smart contract charges 3% handler fee & loan rate is principal plus 0.3% monthly interest
 
@@ -166,6 +166,7 @@ The smart contract should create a mechanism that enables auto loan repayement, 
     + Fetches it from storage
     + If loan is None or doesnt exist in storage then panics
 - Create a `_transferCollateral` internal fn that transfers the collateral from borrowers account into `collateral`  storage var
+- Create `collaterals` & `pledges` public view fn.
 - Create a `_transferFromPledge` internal state fn that:
     + Takes in borrowr and amount
     + Transfer amount from pledges to borrower.
@@ -180,7 +181,23 @@ The smart contract should create a mechanism that enables auto loan repayement, 
     + Transfer the loan amount from pledges to borrower.
     + Add update loan to storage at its original place
     + Emit `LoanEvent` with updated loan details.
+#### IV. Pay Loan
+- Create a `interest` public view fn that:
+    + Takes in `loan_id`
+    + Calculate interest rate  at 1% per month 
+    + If loan is invalid(not acitve) return `0`
+    + Else Returns interest
+**NB//**- *Currently per 60sec for test purpose*
 
+- Create a `_transferFromCollateral` internal state fn that:
+    + Takes `borrower` & `amount`.
+    + Transfer amount from collateral to borrower.  
+- Create a `payLoan` public state fn that:
+    + Takes in `loan_id` & `amount` as parameter
+    + Checks if loan is valid & borrower has enough LST to pay loan plus interest.
+    + Transfer LST plus interest to lender & return collateral to borrower.
+    + Emit a loan event on completion
+    + Delete the loan from storage by assigning `None`
 ### Section C - Contract
 #### 0. Upgradability
 - Create `Upgrade` event that has the caller of upgrade

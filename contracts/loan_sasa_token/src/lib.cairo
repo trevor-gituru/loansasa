@@ -30,9 +30,11 @@ mod LoanSasaToken {
 //       Constants Section
 // -------------------------
 // Define constant variables that are used throughout the contract.
+    const AVG_MONTH: u256 = 60; //2_629_743 AVG MONTH
     const COLLATERAL: u256 = 50;
     const DECIMALS: u8 = 18;
     const ETH_LST_RATE: u256 = 1_000;
+    const INTEREST_MONTHLY_RATE: u256 = 1;
     const MAX_PERIOD: u64 = 31_579_200; // Avergae time of a year
     const NAME: felt252 = 'LoanSasaToken';
     const SYMBOL: felt252 = 'LST';
@@ -92,7 +94,7 @@ mod LoanSasaToken {
         Active,        // Loan is active and has been accepted by the borrower
         Repaid,        // Loan has been fully repaid
         Defaulted,     // Loan has defaulted and collateral has been claimed
-        Closed,        // Loan has been closed or terminated
+        Closed,        // Loan has been closed or terminated by lender
     }
     #[generate_trait]
     impl LoanStatusImpl of LoanStatusTrait{
@@ -212,7 +214,93 @@ mod LoanSasaToken {
 //       Implementation Section
 // -------------------------
 // Implement the contract functions and logic.
-     
+    #[generate_trait]
+    impl InternalStateFunctions of InternalStateFunctionsTraits{
+        fn _insertLoan(ref self: ContractState, new_loan: Loan) -> u64{
+            // Check for an empty vec
+            let next_global_id: u64 = self.loans_counter.read() + 1_u64;
+            if self.loans.len() == 0{
+                self.loans.append().write(Option::Some(new_loan));
+                self.loans_counter.write(next_global_id);
+                return 0_u64;
+            }
+            // Check for vec with empty slot
+            let mut i: u64 = 0;
+            let mut found_slot: bool = false;
+            while i < self.loans.len(){
+                let current_loan: Option<Loan> = self.loans.at(i).read();
+                if current_loan.is_none(){
+                    self.loans.at(i).write(Option::Some(new_loan));
+                    found_slot = true;
+                    break;
+                }
+                i = i + 1;
+            };
+            self.loans_counter.write(next_global_id);
+            if found_slot{
+                return i;
+            }
+            self.loans.append().write(Option::Some(new_loan));
+            return (self.loans.len() - 1_u64);
+        }
+
+        fn _transferFromCollaterals(ref self: ContractState, borrower: ContractAddress, amount: u256){
+            let new_balance = self.collaterals.read() - amount;
+            self.collaterals.write(new_balance);
+            let new_balance = self.account_balances.entry(borrower).read() + amount;
+            self.account_balances.entry(borrower).write(new_balance);
+            
+        }
+
+        fn _transferFromPledges(ref self: ContractState, borrower: ContractAddress, amount: u256){
+            let new_balance = self.pledges.read() - amount;
+            self.pledges.write(new_balance);
+            let new_balance = self.account_balances.entry(borrower).read() + amount;
+            self.account_balances.entry(borrower).write(new_balance);
+            
+        }
+
+        fn _transferToCollaterals(ref self: ContractState, account: ContractAddress, amount: u256){
+            let new_balance = self.account_balances.entry(account).read() - amount;
+            self.account_balances.entry(account).write(new_balance);
+            let new_balance = self.collaterals.read() + amount;
+            self.collaterals.write(new_balance);
+        }
+
+        fn _transferToPledges(ref self: ContractState, account: ContractAddress, amount: u256){
+            let new_balance = self.account_balances.entry(account).read() - amount;
+            self.account_balances.entry(account).write(new_balance);
+            let new_balance = self.pledges.read() + amount;
+            self.pledges.write(new_balance);
+        }
+
+
+    }
+
+    #[generate_trait]
+    impl InternalViewFunctions of InternalViewFunctionsTraits{
+        fn _getLoan(self: @ContractState, loan_id: u64) -> Loan{
+            assert!(loan_id < self.loans.len(), "INVALID LOAN ID");
+            let loan: Option<Loan> = self.loans.at(loan_id).read();
+            assert!(loan.is_some(), "LOAN DOES NOT EXIST");
+            let loan: Loan = loan.unwrap();
+            return loan;
+
+        }
+
+        fn _isOwner(self: @ContractState, account: ContractAddress) -> bool{
+            let owner: ContractAddress = self.owner.read();
+            (owner == account)
+        }
+        fn _sufficientBalance(self: @ContractState, account: ContractAddress,
+            transfer_amount: u256
+        ) -> bool{
+            let balance: u256 = self.balanceOf(account);
+            (transfer_amount < balance)
+        }
+
+    }    
+
     #[abi(embed_v0)]
     impl LoanSasaTokenStateImpl of ILoanSasaTokenState<ContractState> {
         fn approve(ref self: ContractState, borrower: ContractAddress, amount: u256){
@@ -319,13 +407,28 @@ mod LoanSasaToken {
             assert!(loan.status.to_u8() == 0, "LOAN IS ALREADY ACTIVE");
             let collateral: u256 = (loan.amount * COLLATERAL) / 100;
             assert!(self._sufficientBalance(borrower, collateral), "INSUFFICIENT BORROWER BALANCE");
-            self._transferCollaterals(borrower, collateral);
+            self._transferToCollaterals(borrower, collateral);
             loan.sign(borrower);
             self._transferFromPledges(borrower, loan.amount);
             self.loans.at(loan_id).write(Option::Some(loan));
             let loan_event: LoanEvent = LoanEventImpl::new(loan, loan_id);
             self.emit(loan_event);
             
+        }
+
+        fn payLoan(ref self: ContractState, loan_id: u64, amount: u256){
+            let mut loan: Loan = self._getLoan(loan_id);
+            assert!(loan.status.to_u8() == 1, "INACTIVE LOAN");
+            let full_amount: u256 = loan.amount + self.interests(loan_id);
+            assert!(full_amount == amount, "INVALID REPAYMENT AMOUNT");
+            self.transfer(loan.lender, full_amount);
+            let borrower: ContractAddress = get_caller_address();
+            let collateral: u256 = (loan.amount * COLLATERAL) / 100;
+            self._transferFromCollaterals(borrower, collateral);
+            loan.status = LoanStatus::Repaid;
+            let loan_event: LoanEvent = LoanEventImpl::new(loan, loan_id);
+            self.emit(loan_event);
+            self.loans.at(loan_id).write(Option::None);
         }
 
         fn upgrade(ref self: ContractState, new_class_hash: ClassHash) {
@@ -338,7 +441,7 @@ mod LoanSasaToken {
 
     }
 
-    #[abi(embed_v0)]
+     #[abi(embed_v0)]
     impl LoanSasaTokenViewImpl of ILoanSasaTokenView<ContractState> {
         fn allowance(self: @ContractState, lender: ContractAddress,
                 borrower: ContractAddress) -> u256{
@@ -353,6 +456,10 @@ mod LoanSasaToken {
             let contract_address: ContractAddress = get_contract_address();
             let free_tokens: u256 = self.account_balances.entry(contract_address).read();
             (free_tokens <= threshold)
+        }
+
+        fn collaterals(self: @ContractState) -> u256 {
+            self.collaterals.read()
         }
 
         fn decimals(self: @ContractState) -> u8 {
@@ -387,6 +494,21 @@ mod LoanSasaToken {
             return matching_loans;
         }
 
+        fn interests(self: @ContractState, loan_id: u64) -> u256 {
+            let loan: Loan = self._getLoan(loan_id);
+            if loan.status.to_u8() != 1{
+                return 0;
+            }else{
+                let time_taken: u256 = (get_block_timestamp() - 
+                        loan.signed_on.unwrap()).into();
+                let total_months: u256 = time_taken / AVG_MONTH;
+                let interest: u256 = (loan.amount *
+                        INTEREST_MONTHLY_RATE *
+                        total_months) / 100;
+                return interest;
+            }
+        }
+
         fn get_owner(self: @ContractState) -> ContractAddress {
             (self.owner.read())
         }
@@ -395,97 +517,16 @@ mod LoanSasaToken {
             (NAME)
         }
 
+        fn pledges(self: @ContractState) -> u256 {
+            self.pledges.read()
+        }
+
         fn symbol(self: @ContractState) -> felt252 {
             (SYMBOL)
         }
 
         fn totalSupply(self: @ContractState) -> u256 {
             self.total_supply.read()
-        }
-
-        fn col(self: @ContractState) -> u256 {
-            self.collaterals.read()
-        }
-
-        fn pl(self: @ContractState) -> u256 {
-            self.pledges.read()
-        }
-    }
-
-    #[generate_trait]
-    impl InternalViewFunctions of InternalViewFunctionsTraits{
-        fn _getLoan(self: @ContractState, loan_id: u64) -> Loan{
-            assert!(loan_id < self.loans.len(), "INVALID LOAN ID");
-            let loan: Option<Loan> = self.loans.at(loan_id).read();
-            assert!(loan.is_some(), "LOAN DOES NOT EXIST");
-            let loan: Loan = loan.unwrap();
-            return loan;
-
-        }
-
-        fn _isOwner(self: @ContractState, account: ContractAddress) -> bool{
-            let owner: ContractAddress = self.owner.read();
-            (owner == account)
-        }
-        fn _sufficientBalance(self: @ContractState, account: ContractAddress,
-            transfer_amount: u256
-        ) -> bool{
-            let balance: u256 = self.balanceOf(account);
-            (transfer_amount < balance)
-        }
-
-    }
-    #[generate_trait]
-    impl InternalStateFunctions of InternalStateFunctionsTraits{
-        fn _insertLoan(ref self: ContractState, new_loan: Loan) -> u64{
-            // Check for an empty vec
-            let next_global_id: u64 = self.loans_counter.read() + 1_u64;
-            if self.loans.len() == 0{
-                self.loans.append().write(Option::Some(new_loan));
-                self.loans_counter.write(next_global_id);
-                return 0_u64;
-            }
-            // Check for vec with empty slot
-            let mut i: u64 = 0;
-            let mut found_slot: bool = false;
-            while i < self.loans.len(){
-                let current_loan: Option<Loan> = self.loans.at(i).read();
-                if current_loan.is_none(){
-                    self.loans.at(i).write(Option::Some(new_loan));
-                    found_slot = true;
-                    break;
-                }
-                i = i + 1;
-            };
-            self.loans_counter.write(next_global_id);
-            if found_slot{
-                return i;
-            }
-            self.loans.append().write(Option::Some(new_loan));
-            return (self.loans.len() - 1_u64);
-        }
-
-
-
-        fn _transferCollaterals(ref self: ContractState, account: ContractAddress, amount: u256){
-            let new_balance = self.account_balances.entry(account).read() - amount;
-            self.account_balances.entry(account).write(new_balance);
-            let new_balance = self.collaterals.read() + amount;
-            self.collaterals.write(new_balance);
-        }
-
-        fn _transferToPledges(ref self: ContractState, account: ContractAddress, amount: u256){
-            let new_balance = self.account_balances.entry(account).read() - amount;
-            self.account_balances.entry(account).write(new_balance);
-            let new_balance = self.pledges.read() + amount;
-            self.pledges.write(new_balance);
-        }
-        fn _transferFromPledges(ref self: ContractState, borrower: ContractAddress, amount: u256){
-            let new_balance = self.pledges.read() - amount;
-            self.pledges.write(new_balance);
-            let new_balance = self.account_balances.entry(borrower).read() + amount;
-            self.account_balances.entry(borrower).write(new_balance);
-            
         }
 
     }
