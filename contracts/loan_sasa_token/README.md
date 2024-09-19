@@ -118,7 +118,7 @@ The smart contract should create a mechanism that enables auto loan repayement, 
 - Any prospective borrower will **query** with blockchain available loan contracts they can take based on specified amount and period
 - The can then **sign** the loan contract where they are expected to give a 115% collateral based on loan, after which loan is automatically transferred to their account
 - The borrower can then **pay** only the full amount of loan before expected time
-- The lender has the option of checking status of loan, if borrower still hasnt paid they have the option of withdrawing the collateral of offered by the borrower.
+- The lender has the option of checking status of loan, if borrower still hasnt paid they have the option of **withdrawing** the collateral of offered by the borrower.
 - Smart contract charges 3% handler fee & loan rate is principal plus 0.3% monthly interest
 
 ##### I. Lender Loan contract creation
