@@ -151,11 +151,13 @@ The smart contract should create a mechanism that enables auto loan repayement, 
     + Transfer the LST to `pledges`
     + Emit a LoanEvent on completion
 ##### II. Loan querying
+- Create a `toArray` method of `Loan` that converts a loan struct to an Array.
 - Create a `fetchLoan` view fn that:
     + Takes `local_id` of loan
     + Provides Loan located in `loans` vec at `local_id`
 - Create a `filterLoans` view fn that:
     + Takes `amount` & `period`
+    + Checks for loans whose value are above the requested.
     + Returns an array of loan id that meet above criterias
 ### Section C - Contract
 #### 0. Upgradability

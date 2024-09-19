@@ -41,14 +41,39 @@ mod LoanSasaToken {
 // -------------------------
 // Define custom data types used by the contract.
     #[derive(Copy, Drop, Serde, starknet::Store)]
+    pub enum ArrayData {
+        U8: u8,
+        U64: u64,
+        U256: u256,
+        Felt: felt252,
+        Address: ContractAddress,
+    }
+    #[derive(Copy, Drop, Serde, starknet::Store)]
     pub struct Loan {
         id: u64,
         lender: ContractAddress,
         borrower: Option<ContractAddress>,
         amount: u256,
         period: u64,
-        signed_on: Option<ContractAddress>,
+        signed_on: Option<u64>,
         status: LoanStatus
+    }
+
+    #[generate_trait]
+    impl LoanImpl of LoanTrait {
+        fn toArray(loan: Loan) -> Array<ArrayData>{
+            let mut loan_arr:Array<ArrayData> = ArrayTrait::new();
+            let borrower: ContractAddress = loan.borrower
+                                .unwrap_or(contract_address_const::<0x0>());
+            loan_arr.append(ArrayData::U64(loan.id));
+            loan_arr.append(ArrayData::Address(loan.lender));
+            loan_arr.append(ArrayData::Address(borrower));
+            loan_arr.append(ArrayData::U256(loan.amount));
+            loan_arr.append(ArrayData::U64(loan.period));
+            loan_arr.append(ArrayData::U64(loan.signed_on.unwrap_or(0_u64)));
+            loan_arr.append(ArrayData::U8(loan.status.to_u8()));
+            return loan_arr;
+        }
     }
 
     #[derive(Copy, Drop, Serde, starknet::Store)]
@@ -59,6 +84,19 @@ mod LoanSasaToken {
         Defaulted,     // Loan has defaulted and collateral has been claimed
         Closed,        // Loan has been closed or terminated
     }
+    #[generate_trait]
+    impl LoanStatusImpl of LoanStatusTrait{
+        fn to_u8(self: @LoanStatus) -> u8{
+            match self {
+                LoanStatus::Pending => { 0_u8 },
+                LoanStatus::Active => { 1_u8 },
+                LoanStatus::Repaid => { 2_u8},
+                LoanStatus::Defaulted => { 3_u8 },
+                LoanStatus::Closed => { 4_u8 },
+            }
+        }
+    }
+    
 // -------------------------
 //       Events Section
 // -------------------------
@@ -97,13 +135,6 @@ mod LoanSasaToken {
     #[generate_trait]
     impl LoanEventImpl of LoanEventTrait {
         fn new(loan: Loan, local_id: u64) -> LoanEvent{
-            let status_code = match loan.status {
-                LoanStatus::Pending => { 0_u8 },
-                LoanStatus::Active => { 1_u8 },
-                LoanStatus::Repaid => { 2_u8},
-                LoanStatus::Defaulted => { 3_u8 },
-                LoanStatus::Closed => { 4_u8 },
-            };
             LoanEvent {
                 global_id: loan.id,
                 local_id: local_id,
@@ -112,7 +143,7 @@ mod LoanSasaToken {
                 amount: loan.amount,
                 period: loan.period,
                 signed_on: Option::None,
-                status: status_code
+                status: loan.status.to_u8()
             }
         }
     }
@@ -299,6 +330,32 @@ mod LoanSasaToken {
             (DECIMALS)
         }
 
+        fn fetchLoan(self: @ContractState, local_id: u64) -> Array<ArrayData> {
+            assert!(local_id < self.loans.len(), "INVALID LOCAL ID");
+            let loan: Option<Loan> = self.loans.at(local_id).read();
+            if loan.is_none(){
+                return ArrayTrait::<ArrayData>::new();
+            }
+            let loan_arr = LoanImpl::toArray(loan.unwrap());
+            loan_arr
+        }
+
+        fn filterLoan(self: @ContractState, amount: u256, period: u64) -> Array<u64> {
+            let mut matching_loans: Array<u64> = array![];
+            let mut i: u64 = 0;
+            while i < self.loans.len(){
+                let current_loan: Option<Loan> = self.loans.at(i).read();
+                if current_loan.is_some(){
+                    let current_loan: Loan = current_loan.unwrap();
+                    if amount < current_loan.amount && period < current_loan.period{
+                        matching_loans.append(i);
+                    }
+                }
+                i = i + 1;
+            };
+            return matching_loans;
+        }
+
         fn get_owner(self: @ContractState) -> ContractAddress {
             (self.owner.read())
         }
@@ -314,7 +371,6 @@ mod LoanSasaToken {
         fn totalSupply(self: @ContractState) -> u256 {
             self.total_supply.read()
         }
-
     }
 
     #[generate_trait]

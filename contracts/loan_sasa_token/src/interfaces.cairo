@@ -1,5 +1,7 @@
 use core::starknet::ClassHash;
 use starknet::ContractAddress;
+use loan_sasa_token::LoanSasaToken::ArrayData;
+
 // State changing public functions
 #[starknet::interface]
 pub trait ILoanSasaTokenState<TContractState> {
@@ -22,9 +24,11 @@ pub trait ILoanSasaTokenView<TContractState> {
     fn balanceOf(self: @TContractState, account: ContractAddress) -> u256;
     fn canMint(self: @TContractState) -> bool;
     fn decimals(self: @TContractState) -> u8;
-    // fn fetchLoan(self: @TContractState, local_id: u64) -> Array<u128>;
+    fn fetchLoan(self: @TContractState, local_id: u64) -> Array<ArrayData>;
+    fn filterLoan(self: @TContractState, amount: u256, period: u64) -> Array<u64>;
     fn get_owner(self: @TContractState) -> ContractAddress;
     fn name(self: @TContractState) -> felt252;
     fn symbol(self: @TContractState) -> felt252;
     fn totalSupply(self: @TContractState) -> u256;
+
 }
