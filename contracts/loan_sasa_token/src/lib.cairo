@@ -30,6 +30,7 @@ mod LoanSasaToken {
 //       Constants Section
 // -------------------------
 // Define constant variables that are used throughout the contract.
+    const COLLATERAL: u256 = 50;
     const DECIMALS: u8 = 18;
     const ETH_LST_RATE: u256 = 1_000;
     const MAX_PERIOD: u64 = 31_579_200; // Avergae time of a year
@@ -61,6 +62,14 @@ mod LoanSasaToken {
 
     #[generate_trait]
     impl LoanImpl of LoanTrait {
+        fn sign(ref self: Loan, borrower: ContractAddress){
+            let time: u64 = get_block_timestamp();
+            self.borrower = Option::Some(borrower);
+            self.signed_on = Option::Some(time);
+            self.status = LoanStatus::Active;
+
+        }
+
         fn toArray(loan: Loan) -> Array<ArrayData>{
             let mut loan_arr:Array<ArrayData> = ArrayTrait::new();
             let borrower: ContractAddress = loan.borrower
@@ -74,6 +83,7 @@ mod LoanSasaToken {
             loan_arr.append(ArrayData::U8(loan.status.to_u8()));
             return loan_arr;
         }
+
     }
 
     #[derive(Copy, Drop, Serde, starknet::Store)]
@@ -126,23 +136,26 @@ mod LoanSasaToken {
         global_id: u64,
         local_id: u64,
         lender: ContractAddress,
-        borrower: Option<ContractAddress>,
+        borrower: ContractAddress,
         amount: u256,
         period: u64,
-        signed_on: Option<ContractAddress>,
+        signed_on: u64,
         status: u8
     }
     #[generate_trait]
     impl LoanEventImpl of LoanEventTrait {
         fn new(loan: Loan, local_id: u64) -> LoanEvent{
+            let borrower: ContractAddress = loan.borrower
+                        .unwrap_or(contract_address_const::<0x0>());
+            let signed_on: u64 = loan.signed_on.unwrap_or(0);
             LoanEvent {
                 global_id: loan.id,
                 local_id: local_id,
                 lender: loan.lender,
-                borrower: Option::None,
+                borrower: borrower,
                 amount: loan.amount,
                 period: loan.period,
-                signed_on: Option::None,
+                signed_on: signed_on,
                 status: loan.status.to_u8()
             }
         }
@@ -179,6 +192,7 @@ mod LoanSasaToken {
     struct Storage {
         account_balances: Map<ContractAddress, u256>,
         approvals: Map<ContractAddress, Map<ContractAddress, u256>>,
+        collaterals: u256,
         loans_counter: u64,
         loans: Vec<Option<Loan>>,
         owner: ContractAddress,
@@ -237,12 +251,12 @@ mod LoanSasaToken {
             ).unwrap_syscall();
         }
         
-        fn createPledge(ref self: ContractState,
+        fn createLoan(ref self: ContractState,
                 amount: u256, period: u64){
             let lender: ContractAddress = (get_caller_address());
             assert!(self._sufficientBalance(lender, amount), "INSUFFICIENT BALANCE");
             assert!(period <= MAX_PERIOD, "PERIOD EXCEEDED A YEAR");
-            self._transferPledges(lender, amount);
+            self._transferToPledges(lender, amount);
             let loan_id: u64 = self.loans_counter.read();
             let loan: Loan = Loan {
                 id: loan_id,
@@ -299,6 +313,21 @@ mod LoanSasaToken {
             self.emit(Transfer{from, to, amount});
         }
 
+        fn signLoan(ref self: ContractState, loan_id: u64) {
+            let borrower: ContractAddress = get_caller_address();
+            let mut loan: Loan = self._getLoan(loan_id);
+            assert!(loan.status.to_u8() == 0, "LOAN IS ALREADY ACTIVE");
+            let collateral: u256 = (loan.amount * COLLATERAL) / 100;
+            assert!(self._sufficientBalance(borrower, collateral), "INSUFFICIENT BORROWER BALANCE");
+            self._transferCollaterals(borrower, collateral);
+            loan.sign(borrower);
+            self._transferFromPledges(borrower, loan.amount);
+            self.loans.at(loan_id).write(Option::Some(loan));
+            let loan_event: LoanEvent = LoanEventImpl::new(loan, loan_id);
+            self.emit(loan_event);
+            
+        }
+
         fn upgrade(ref self: ContractState, new_class_hash: ClassHash) {
             let caller: ContractAddress = get_caller_address();
             assert!(self._isOwner(caller), "INSUFFICIENT AUTHORITY");
@@ -331,7 +360,7 @@ mod LoanSasaToken {
         }
 
         fn fetchLoan(self: @ContractState, local_id: u64) -> Array<ArrayData> {
-            assert!(local_id < self.loans.len(), "INVALID LOCAL ID");
+            assert!(local_id < self.loans.len(), "INVALID LOAN ID");
             let loan: Option<Loan> = self.loans.at(local_id).read();
             if loan.is_none(){
                 return ArrayTrait::<ArrayData>::new();
@@ -347,7 +376,9 @@ mod LoanSasaToken {
                 let current_loan: Option<Loan> = self.loans.at(i).read();
                 if current_loan.is_some(){
                     let current_loan: Loan = current_loan.unwrap();
-                    if amount < current_loan.amount && period < current_loan.period{
+                    if (amount <= current_loan.amount) && 
+                            (period <= current_loan.period) && 
+                            (current_loan.status.to_u8() == 0) {
                         matching_loans.append(i);
                     }
                 }
@@ -371,10 +402,27 @@ mod LoanSasaToken {
         fn totalSupply(self: @ContractState) -> u256 {
             self.total_supply.read()
         }
+
+        fn col(self: @ContractState) -> u256 {
+            self.collaterals.read()
+        }
+
+        fn pl(self: @ContractState) -> u256 {
+            self.pledges.read()
+        }
     }
 
     #[generate_trait]
     impl InternalViewFunctions of InternalViewFunctionsTraits{
+        fn _getLoan(self: @ContractState, loan_id: u64) -> Loan{
+            assert!(loan_id < self.loans.len(), "INVALID LOAN ID");
+            let loan: Option<Loan> = self.loans.at(loan_id).read();
+            assert!(loan.is_some(), "LOAN DOES NOT EXIST");
+            let loan: Loan = loan.unwrap();
+            return loan;
+
+        }
+
         fn _isOwner(self: @ContractState, account: ContractAddress) -> bool{
             let owner: ContractAddress = self.owner.read();
             (owner == account)
@@ -389,13 +437,6 @@ mod LoanSasaToken {
     }
     #[generate_trait]
     impl InternalStateFunctions of InternalStateFunctionsTraits{
-        fn _transferPledges(ref self: ContractState, account: ContractAddress, amount: u256){
-            let new_balance = self.account_balances.entry(account).read() - amount;
-            self.account_balances.entry(account).write(new_balance);
-            let new_balance = self.pledges.read() + amount;
-            self.pledges.write(new_balance);
-        }
-
         fn _insertLoan(ref self: ContractState, new_loan: Loan) -> u64{
             // Check for an empty vec
             let next_global_id: u64 = self.loans_counter.read() + 1_u64;
@@ -423,5 +464,29 @@ mod LoanSasaToken {
             self.loans.append().write(Option::Some(new_loan));
             return (self.loans.len() - 1_u64);
         }
+
+
+
+        fn _transferCollaterals(ref self: ContractState, account: ContractAddress, amount: u256){
+            let new_balance = self.account_balances.entry(account).read() - amount;
+            self.account_balances.entry(account).write(new_balance);
+            let new_balance = self.collaterals.read() + amount;
+            self.collaterals.write(new_balance);
+        }
+
+        fn _transferToPledges(ref self: ContractState, account: ContractAddress, amount: u256){
+            let new_balance = self.account_balances.entry(account).read() - amount;
+            self.account_balances.entry(account).write(new_balance);
+            let new_balance = self.pledges.read() + amount;
+            self.pledges.write(new_balance);
+        }
+        fn _transferFromPledges(ref self: ContractState, borrower: ContractAddress, amount: u256){
+            let new_balance = self.pledges.read() - amount;
+            self.pledges.write(new_balance);
+            let new_balance = self.account_balances.entry(borrower).read() + amount;
+            self.account_balances.entry(borrower).write(new_balance);
+            
+        }
+
     }
 }

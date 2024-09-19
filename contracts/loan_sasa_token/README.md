@@ -121,7 +121,7 @@ The smart contract should create a mechanism that enables auto loan repayement, 
 - The lender has the option of checking status of loan, if borrower still hasnt paid they have the option of withdrawing the collateral of offered by the borrower.
 - Smart contract charges 3% handler fee & loan rate is principal plus 0.3% monthly interest
 
-##### I. Lender pledge creation
+##### I. Lender Loan contract creation
 - Create a `pledges` storage var to store overall pledges of lenders
 - Create a `_transferPledges` internal fn to handle transfer of tokens betweens lenders & pledges
 - Create a `loans_counter` that counts number of loan contracts created and initialized to 0 on creation smart contract
@@ -145,7 +145,7 @@ The smart contract should create a mechanism that enables auto loan repayement, 
     + Accpets a `Loan` 
     + Loops through the vec to find an empty slot and if not appends the loan to a new slot
     + Returns the slot id
-- Create a `createLoanPledge` state fn that:
+- Create a `createLoan` state fn that:
     + Takes in `amount` and `period` (seconds) to pledge
     + Asserts that lender has sufficient balance & that period not exceed 1 year
     + Transfer the LST to `pledges`
@@ -159,6 +159,28 @@ The smart contract should create a mechanism that enables auto loan repayement, 
     + Takes `amount` & `period`
     + Checks for loans whose value are above the requested.
     + Returns an array of loan id that meet above criterias
+
+#### III. Signing loan contract
+- Create a `_getLoan` internal view fn that:
+    + Takes in a `loan_id`
+    + Fetches it from storage
+    + If loan is None or doesnt exist in storage then panics
+- Create a `_transferCollateral` internal fn that transfers the collateral from borrowers account into `collateral`  storage var
+- Create a `_transferFromPledge` internal state fn that:
+    + Takes in borrowr and amount
+    + Transfer amount from pledges to borrower.
+- Update `LoanImply` by adding `sign` method that:
+    + Takes in `borrower` address
+    + Updates itself with borrower, signing date & signing (Active)
+- Create a `signLoan` state fn that:
+    + Takes in `loan_id` of loan contract.
+    + Checks if loan exists, pending status & if borrower has enough LST for collaterals
+    + Transfer collateral of borrower.
+    + Update loan with new borrower details.
+    + Transfer the loan amount from pledges to borrower.
+    + Add update loan to storage at its original place
+    + Emit `LoanEvent` with updated loan details.
+
 ### Section C - Contract
 #### 0. Upgradability
 - Create `Upgrade` event that has the caller of upgrade
