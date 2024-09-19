@@ -198,6 +198,20 @@ The smart contract should create a mechanism that enables auto loan repayement, 
     + Transfer LST plus interest to lender & return collateral to borrower.
     + Emit a loan event on completion
     + Delete the loan from storage by assigning `None`
+
+#### V. Added lender capability
+- Create a `deleteLoan` public state fn that:
+    + Takes in `loan_id`
+    + Only loan creater is able to delete it & must be pending
+    + Replace loan value with `None` value.
+    + Release pledge back to lender
+    + Emit loanEvent.
+- Create a `reclaimLoan` public state fn that:
+    + Takes in `loan_id`
+    + Assert caller is the lender and that loan is active
+    + Assert that deadline has passed
+    + Transfer colllateral to lender and default loan
+    + Delete loan & emit its event.
 ### Section C - Contract
 #### 0. Upgradability
 - Create `Upgrade` event that has the caller of upgrade

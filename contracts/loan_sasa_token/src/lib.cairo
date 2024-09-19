@@ -359,6 +359,17 @@ mod LoanSasaToken {
             let loan_event: LoanEvent = LoanEventImpl::new(loan, local_id);
             self.emit(loan_event);
         }
+        fn deleteLoan(ref self: ContractState, loan_id: u64){
+            let mut loan: Loan = self._getLoan(loan_id);
+            let account: ContractAddress = get_caller_address();
+            assert!(account == loan.lender, "NOT OWNER OF LOAN");
+            assert!(loan.status.to_u8() == 0, "LOAN IS NOT PENDING");
+            self._transferFromPledges(account, loan.amount);
+            loan.status = LoanStatus::Closed;
+            let loan_event: LoanEvent = LoanEventImpl::new(loan, loan_id);
+            self.loans.at(loan_id).write(Option::None);
+            self.emit(loan_event);
+        }
 
         fn mint(ref self: ContractState, amount: u256){
             let account: ContractAddress = (get_caller_address());
@@ -399,6 +410,21 @@ mod LoanSasaToken {
             let new_balance: u256 = approval_amount - amount;
             self.approvals.entry(from).entry(to).write(new_balance);
             self.emit(Transfer{from, to, amount});
+        }
+
+        fn reclaimLoan(ref self: ContractState, loan_id: u64){
+            let mut loan: Loan = self._getLoan(loan_id);
+            let lender: ContractAddress = get_caller_address();
+            assert!(lender == loan.lender, "NOT OWNER OF LOAN");
+            assert!(loan.status.to_u8() == 1, "INACTIVE LOAN");
+            let deadline: u64 = loan.signed_on.unwrap() + loan.period;
+            assert!(get_block_timestamp() > deadline, "DEADLINE HASNT PASSED");
+            let collateral: u256 = (loan.amount * COLLATERAL) / 100;
+            self._transferFromCollaterals(lender, collateral);
+            loan.status = LoanStatus::Defaulted;
+            let loan_event: LoanEvent = LoanEventImpl::new(loan, loan_id);
+            self.loans.at(loan_id).write(Option::None);
+            self.emit(loan_event);
         }
 
         fn signLoan(ref self: ContractState, loan_id: u64) {

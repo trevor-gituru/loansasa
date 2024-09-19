@@ -9,8 +9,10 @@ pub trait ILoanSasaTokenState<TContractState> {
     fn buyTokens(ref self: TContractState, amount: u256);
     fn createLoan(ref self: TContractState, 
         amount: u256, period: u64);
+    fn deleteLoan(ref self: TContractState, loan_id: u64);
     fn mint(ref self: TContractState, amount: u256);
     fn payLoan(ref self: TContractState, loan_id: u64, amount: u256);
+    fn reclaimLoan(ref self: TContractState, loan_id: u64);
     fn signLoan(ref self: TContractState, loan_id: u64);
     fn transfer(ref self: TContractState, reciepient: ContractAddress, amount: u256);
     fn transferFrom(ref self: TContractState, from: ContractAddress, amount: u256);
