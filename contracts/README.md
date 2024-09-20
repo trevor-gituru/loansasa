@@ -92,6 +92,10 @@ response: [0x2710, 0x0]
 ```
 **NB//** For above `-v v3` specifies using strk tokens for gas fees
 
+## 5. Testing JSON-RPC
+- To test whether events are successfully generated one can use postman to make `POST` request based on contract details and block number
+- One can import the `LoanSasaToken.postman_collection.json` to postman and change config like block number, contract address & event keys to better test events of smart contract
+
 # Resources
 - [starknet-foundry](https://github.com/foundry-rs/starknet-foundry)
 - [Smart Contract in Cairo](https://book.cairo-lang.org/ch01-01-installation.html)

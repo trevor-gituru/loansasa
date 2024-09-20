@@ -1,0 +1,118 @@
+{
+	"info": {
+		"_postman_id": "74c26d55-6cd6-4c00-b6c3-6921584149d1",
+		"name": "LoanSasaToken",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "13180669"
+	},
+	"item": [
+		{
+			"name": "Get Events",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"starknet_getEvents\",\n  \"params\": {\n    \"filter\": {\n      \"from_block\": {\n        \"block_number\": 0\n      },\n      \"to_block\": {\n        \"block_number\": 366\n      },\n      \"address\": \"0x65b4857f14b4760dbf2a21f92db6bd6a2844b0a3859f7a8f613fc5da46522b0\",\n      \"keys\": [],\n      \"chunk_size\": 100  \n    }\n  },\n  \"id\": 1\n}\n"
+				},
+				"url": {
+					"raw": "http://127.0.0.1:5050/rpc",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "5050",
+					"path": [
+						"rpc"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get latest block",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"starknet_blockNumber\",\n  \"params\": [],\n  \"id\": 1\n}"
+				},
+				"url": {
+					"raw": "http://127.0.0.1:5050/rpc",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "5050",
+					"path": [
+						"rpc"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Accounts",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://127.0.0.1:5050/predeployed_accounts",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "5050",
+					"path": [
+						"predeployed_accounts"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Config",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://127.0.0.1:5050/config",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "5050",
+					"path": [
+						"config"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
