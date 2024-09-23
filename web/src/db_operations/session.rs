@@ -74,6 +74,24 @@ pub async fn check_session (
         exists
 }
 
+pub async fn get_session (
+    conn: &mut Connection,
+    req: &HttpRequest) -> i32{
+        // Get cookies from the request
+        let session_cookies = req.cookie("session_id");
+        if session_cookies.is_none(){
+            return 0;
+        }
+        let session_cookies = session_cookies.unwrap();
+        let session_id = session_cookies.value();
+        let key = format!("Session:{}", &session_id);
+        println!("{}", &key);
+        let err_msg = "Error check existance of session id in check_session";
+        let json_session: String = conn.get(key).await.expect(err_msg);
+        let session: Session = serde_json::from_str(&json_session).unwrap();
+        session.user_id
+}
+
 pub async fn delete_session (
     conn: &mut Connection,
     req: &HttpRequest) -> cookie::Cookie<'static>{

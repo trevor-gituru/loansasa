@@ -20,7 +20,11 @@ pub struct HomeTemplate{}
 
 #[derive(Template)]
 #[template(path = "dashboard/profile.html")]
-pub struct ProfileTemplate{}
+pub struct ProfileTemplate<'a>{
+    pub account_address: &'a str,
+    pub private_key: &'a str,
+    pub error: Option<&'a str>,
+}
 
 #[derive(Template)]
 #[template(path = "dashboard/loans.html")]

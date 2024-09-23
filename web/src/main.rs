@@ -12,13 +12,15 @@ use crate::controllers::auth::{register_get,
     login_get,register_post,
     login_post,
     logout};
-use crate::controllers::dashboard::dashboard_get;
+use crate::controllers::dashboard::{dashboard_get, profile_post};
 use crate::db_operations::connections::{establish_db_connection,
     establish_redis_connection};
 use crate::models::app_state::AppState;
-use crate::controllers::tests::{client,
-    test_redis};
-
+use crate::controllers::tests::tests1::{client,
+    test_redis,
+    starknet_get,
+    starknet_mint};
+use crate::controllers::tests::stark::{starknet_block, starknet_account, starknet_events};
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     // Initialize the connection pool
@@ -47,10 +49,16 @@ async fn main() -> std::io::Result<()> {
                 web::scope("/tests")
                 .route("/client", web::get().to(client))
                 .route("/redis", web::get().to(test_redis))
+                .route("/starknet", web::get().to(starknet_get))
+                .route("/mint", web::get().to(starknet_mint))
+                .route("/block", web::get().to(starknet_block))
+                .route("/account", web::get().to(starknet_account))
+                .route("/events", web::get().to(starknet_events))
             )
             .service(
                 web::scope("/dashboard")
                 .route("/{path}", web::get().to(dashboard_get))
+                .route("/profile", web::post().to(profile_post))
             )
 
             

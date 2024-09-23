@@ -397,6 +397,15 @@ Create a `client_info` submodule in `utils` module to fetch info of the client
     * Uses `check_session` to chek if session exists
     * If it does render respective dashboard page
     * Otherwise redirect user to `/auth/login`
+## Section D - LoanSasaToken Contract integration
+The main aim of this section is to be able to interact with starknet and LoanSasaToken smart contract as well as utilize predeployed accounts
+### 0. Fetch & Store the predeployed accounts
+- Create a PSQL table for `wallets` that has:
+    + `id`
+    + `account_address`
+    + `private_key`
+    + `public_key`
+    + `user_id` - FK to user table id
 # Resources
 - [Postgress](https://www.cherryservers.com/blog/how-to-install-and-setup-postgresql-server-on-ubuntu-20-04)
 - [Actix](https://actix.rs/docs/getting-started/)

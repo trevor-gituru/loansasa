@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fetch Plain Text</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        #data {
+            margin-top: 20px;
+            border: 1px solid #ccc;
+            padding: 10px;
+            background-color: #f9f9f9;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <h1>Plain Text Response from Local Server</h1>
+    <button id="loadData">Load Data</button>
+    <div id="data">Click the button to load data</div>
+
+    <script>
+        document.getElementById('loadData').addEventListener('click', function() {
+            fetch('/tests/block')
+                .then(response => response.text())  // Get response as plain text
+                .then(data => {
+                    document.getElementById('data').textContent = data;  // Display the text
+                })
+                .catch(error => {
+                    document.getElementById('data').innerText = 'Error loading data';
+                    console.error('Error:', error);
+                });
+        });
+    </script>
+</body>
+</html>
+

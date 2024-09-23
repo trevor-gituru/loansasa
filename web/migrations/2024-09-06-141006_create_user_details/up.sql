@@ -1,0 +1,7 @@
+-- Your SQL goes here
+CREATE TABLE IF NOT EXISTS user_details (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE NOT NULL UNIQUE,
+    account_address VARCHAR(255) NOT NULL UNIQUE,
+    private_key VARCHAR(255) NOT NULL UNIQUE
+);
