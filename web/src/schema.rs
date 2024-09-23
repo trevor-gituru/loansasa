@@ -30,7 +30,7 @@ diesel::table! {
         #[max_length = 255]
         starknet_address -> Varchar,
         #[max_length = 255]
-        public_key -> Nullable<Varchar>,
+        public_key -> Varchar,
         #[max_length = 255]
         private_key -> Varchar,
         user_id -> Nullable<Int4>,

@@ -400,12 +400,17 @@ Create a `client_info` submodule in `utils` module to fetch info of the client
 ## Section D - LoanSasaToken Contract integration
 The main aim of this section is to be able to interact with starknet and LoanSasaToken smart contract as well as utilize predeployed accounts
 ### 0. Fetch & Store the predeployed accounts
-- Create a PSQL table for `wallets` that has:
+- Create a **PSQL table** for `wallets` that has:
     + `id`
     + `account_address`
     + `private_key`
     + `public_key`
     + `user_id` - FK to user table id
+- Create a wallets **model** to mimick above info (& also one for inserting)
+- Create a wallets **db_operation** to:
+    + `create_wallet`: Insert a new wallet
+    + `find_wallet`: Find wallet based on user id. If user-id is 0, then find a wallet that isnt assigned to a user.
+    + `assign`: To assing a user_id to a wallet.
 # Resources
 - [Postgress](https://www.cherryservers.com/blog/how-to-install-and-setup-postgresql-server-on-ubuntu-20-04)
 - [Actix](https://actix.rs/docs/getting-started/)
