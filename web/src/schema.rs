@@ -28,7 +28,7 @@ diesel::table! {
     wallets (id) {
         id -> Int4,
         #[max_length = 255]
-        starknet_address -> Varchar,
+        account_address -> Varchar,
         #[max_length = 255]
         public_key -> Varchar,
         #[max_length = 255]

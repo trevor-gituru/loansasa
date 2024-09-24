@@ -15,6 +15,7 @@ use crate::controllers::auth::{register_get,
 use crate::controllers::dashboard::{dashboard_get, profile_post};
 use crate::db_operations::connections::{establish_db_connection,
     establish_redis_connection};
+use crate::db_operations::wallets::setup_account;
 use crate::models::app_state::AppState;
 use crate::controllers::tests::tests1::{client,
     test_redis,
@@ -27,7 +28,8 @@ async fn main() -> std::io::Result<()> {
     let db_pool = establish_db_connection();
     let redis_pool = establish_redis_connection();
 
-
+    let mut conn = db_pool.get().unwrap();
+    setup_account(&mut conn).await;
     // Create app state with the connection pool
     let app_state = AppState { 
         db_pool: Arc::new(db_pool),

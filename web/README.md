@@ -405,12 +405,20 @@ The main aim of this section is to be able to interact with starknet and LoanSas
     + `account_address`
     + `private_key`
     + `public_key`
-    + `user_id` - FK to user table id
+    + `user_id` - FK to user table id, default is 1 which is admin id
 - Create a wallets **model** to mimick above info (& also one for inserting)
+- Create an `Account` models to match accounts fetched from starknet-devnet
 - Create a wallets **db_operation** to:
     + `create_wallet`: Insert a new wallet
     + `find_wallet`: Find wallet based on user id. If user-id is 0, then find a wallet that isnt assigned to a user.
-    + `assign`: To assing a user_id to a wallet.
+    + `assign_wallet`: To assing a user_id to a wallet.
+    + `wallet_exists`: Check whether wallet exist based on `starknet_account`
+    + `setup_wallets`: This is  incharge of:
+        * Making GET request to starknet-devnet to fetch predeployed accounts
+        * Inserting to Database non-existing accounts
+**NB//** - Unavailable wallets assigned to admin id (1)
+- Call `setup_wallets` in main fn    
+
 # Resources
 - [Postgress](https://www.cherryservers.com/blog/how-to-install-and-setup-postgresql-server-on-ubuntu-20-04)
 - [Actix](https://actix.rs/docs/getting-started/)
