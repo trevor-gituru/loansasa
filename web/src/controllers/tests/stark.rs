@@ -48,12 +48,7 @@ struct Event {
     keys: Vec<String>,
     data: Vec<String>,
 }
-// #[derive(Serialize, Deserialize, Debug)]
-// struct ErrorResponse {
-//     jsonrpc: String,
-//     id: u32,
-//     error: ErrorDetails,
-// }
+
 
 pub async fn starknet_block() -> HttpResponse {
 

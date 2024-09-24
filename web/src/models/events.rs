@@ -39,5 +39,41 @@ pub enum ParamBlock {
 }
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Block {
-    block_number: u32,
+    pub block_number: u32,
+}
+
+// Response section
+#[derive(Serialize, Deserialize, Debug)]
+pub struct RpcResponse {
+    pub jsonrpc: String,
+    pub id: u32,
+    pub result: Option< RpcResultType>, // Result is optional to handle the case when error might occur
+    pub error: Option<RpcError>,    // Error in case of failure
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct RpcError {
+    pub code: i32,
+    pub message: String,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(untagged)]
+pub enum  RpcResultType {
+    Events(EventData),
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct EventData {
+    pub events: Vec<Event>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Event {
+    pub transaction_hash: String,
+    pub block_hash: String,
+    pub block_number: u32,
+    pub from_address: String,
+    pub keys: Vec<String>,
+    pub data: Vec<String>,
 }

@@ -421,6 +421,7 @@ The main aim of this section is to be able to interact with starknet and LoanSas
 
 ### 1. Events controller
 - Create an `events` **models**.
+#### 1.0) Models
 - In it, add the JSON-RPC requests models which is :
     + `RpcRequest` it will have:
         * `jsonrpc`: version to use
@@ -429,7 +430,14 @@ The main aim of this section is to be able to interact with starknet and LoanSas
             - It can either be empty or a filter structure
             - Filter will describe block range, smart contract address, event keys & limit to events to fetch
         * `id`: of request 
-    + 
+    + `RpcResonse` which will have:
+        * `jsonrpc`: version used
+        * `id`: of request
+        * `error`: It is optional
+            + `code` of error
+            + `message`: describe error
+        * `result`: of query which can be either int (calling latest block), or events
+            + `events`: It will have values which will be an array of events. An event will consist of transaction_hash, block_hash, block_number, contract_address, arrays of event keys & data
 # Resources
 - [Postgress](https://www.cherryservers.com/blog/how-to-install-and-setup-postgresql-server-on-ubuntu-20-04)
 - [Actix](https://actix.rs/docs/getting-started/)
