@@ -419,6 +419,17 @@ The main aim of this section is to be able to interact with starknet and LoanSas
 **NB//** - Unavailable wallets assigned to admin id (1)
 - Call `setup_wallets` in main fn    
 
+### 1. Events controller
+- Create an `events` **models**.
+- In it, add the JSON-RPC requests models which is :
+    + `RpcRequest` it will have:
+        * `jsonrpc`: version to use
+        * `method`: to call
+        * `params`: of method.
+            - It can either be empty or a filter structure
+            - Filter will describe block range, smart contract address, event keys & limit to events to fetch
+        * `id`: of request 
+    + 
 # Resources
 - [Postgress](https://www.cherryservers.com/blog/how-to-install-and-setup-postgresql-server-on-ubuntu-20-04)
 - [Actix](https://actix.rs/docs/getting-started/)

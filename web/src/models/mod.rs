@@ -1,4 +1,5 @@
 pub mod app_state;
+pub mod events;
 pub mod session;
 pub mod ui;
 pub mod users;
