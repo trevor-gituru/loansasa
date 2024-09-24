@@ -209,6 +209,8 @@ mod LoanSasaToken {
     fn constructor(ref self: ContractState, owner_account: ContractAddress) {
         self.owner.write(owner_account);
         self.loans_counter.write(0_u64);
+        self.emit(Upgrade{by: owner_account});
+
     }
 // -------------------------
 //       Implementation Section
